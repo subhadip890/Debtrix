@@ -65,11 +65,12 @@ export function useTransaction() {
       const transaction = txBuilder.build()
 
       // 5. Sign with Freighter
-      if (!window.freighter) {
-        throw new Error('Freighter wallet not found.')
+      const { isConnected, signTransaction } = await import('@stellar/freighter-api');
+      if (!(await isConnected())) {
+        throw new Error('Freighter wallet not found or disconnected.')
       }
 
-      const signedXdr = await window.freighter.signTransaction(
+      const signedXdr = await signTransaction(
         transaction.toXDR(),
         { network: 'TESTNET' }
       )

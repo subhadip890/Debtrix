@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-
-const isConnected = () =>
-  typeof window !== 'undefined' && typeof window.freighter !== 'undefined'
+import { isConnected as isFreighterConnected, requestAccess, getPublicKey, getNetwork as getFreighterNetwork } from '@stellar/freighter-api'
 
 export function useWallet() {
   const [publicKey, setPublicKey] = useState(() => {
@@ -13,35 +11,34 @@ export function useWallet() {
 
   // On mount, validate stored key still has freighter access
   useEffect(() => {
-    if (publicKey && isConnected()) {
-      window.freighter
-        .isConnected()
-        .then((connected) => {
+    const validateConnection = async () => {
+      if (publicKey) {
+        try {
+          const connected = await isFreighterConnected()
           if (!connected) {
             setPublicKey(null)
             localStorage.removeItem('debtrix_wallet')
           }
-        })
-        .catch(() => {})
+        } catch (err) {
+           // Handle case where freighter extension is not available
+        }
+      }
     }
+    validateConnection()
   }, [])
 
   const connectWallet = useCallback(async () => {
     setError(null)
     setConnecting(true)
     try {
-      if (!isConnected()) {
-        throw new Error('Freighter wallet not found. Please install the Freighter extension.')
-      }
-
-      const connected = await window.freighter.isConnected()
+      const connected = await isFreighterConnected()
       if (!connected) {
-        throw new Error('Please open Freighter and unlock your wallet.')
+        throw new Error('Please install Freighter extension or unlock your wallet.')
       }
 
-      await window.freighter.requestAccess()
-      const key = await window.freighter.getPublicKey()
-      const net = await window.freighter.getNetwork()
+      await requestAccess()
+      const key = await getPublicKey()
+      const net = await getFreighterNetwork()
 
       setPublicKey(key)
       setNetwork(net || 'TESTNET')
