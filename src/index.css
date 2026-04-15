@@ -64,42 +64,8 @@ body {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* ─── Gradient Button ─── */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  border-radius: var(--radius-sm);
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
-  color: #fff;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 15px var(--accent-glow);
-  white-space: nowrap;
-}
-
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px var(--accent-glow);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
+/* ─── Action Buttons ─── */
+.btn-primary, .btn-secondary, .btn-success {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -109,68 +75,29 @@ body {
   font-weight: 500;
   font-family: 'Inter', sans-serif;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
   cursor: pointer;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d1d5db;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  backdrop-filter: blur(8px);
 }
 
-.btn-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  color: var(--text-primary);
-  background: var(--bg-surface-hover);
-}
-
-.btn-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  cursor: pointer;
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--error);
-  transition: all 0.2s;
-}
-
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-}
-
-/* ─── Success Button ─── */
-.btn-success {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  border-radius: var(--radius-sm);
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 15px var(--success-glow);
-}
-
-.btn-success:hover:not(:disabled) {
-  opacity: 0.9;
+.btn-primary:hover:not(:disabled), .btn-secondary:hover:not(:disabled), .btn-success:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.btn-success:disabled {
-  opacity: 0.5;
+.btn-primary:active:not(:disabled), .btn-secondary:active:not(:disabled), .btn-success:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled, .btn-secondary:disabled, .btn-success:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
