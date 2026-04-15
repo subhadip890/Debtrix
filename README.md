@@ -1,196 +1,208 @@
-<![CDATA[<div align="center">
-
 # ⚡ Debtrix — Expense Split & Auto-Pay on Stellar
 
-**A decentralized expense-splitting dApp built on the Stellar Testnet**
+> A decentralized expense-splitting dApp built on the **Stellar Testnet**.
+> Split bills · Track debts · Settle with XLM — transparently, on-chain.
 
-Split bills · Track debts · Settle with XLM — all on-chain.
-
-[![Stellar](https://img.shields.io/badge/Stellar-Testnet-blue?logo=stellar&logoColor=white)](https://stellar.org)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
-[![Three.js](https://img.shields.io/badge/Three.js-WebGL-000000?logo=three.js&logoColor=white)](https://threejs.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-</div>
+[![Stellar](https://img.shields.io/badge/Stellar-Testnet-blue?style=flat-square&logo=stellar)](https://stellar.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 ---
 
 ## 📌 Project Description
 
-**Debtrix** is a blockchain-powered expense-splitting application that removes the trust issues, confusion, and friction of group payments. Instead of relying on centralized services, Debtrix leverages the **Stellar blockchain** for transparent, instant, and near-free settlements using **XLM**.
+**Debtrix** is a blockchain-powered expense-splitting application built for the Stellar ecosystem. It removes the friction, confusion, and trust issues of group payments by letting users add shared expenses, automatically calculate who owes whom, and settle debts directly using **XLM** on the Stellar Testnet — all without any central intermediary.
 
-### Why Debtrix?
+### Who is it for?
 
-| Problem | Debtrix Solution |
-|---------|-----------------|
-| "Who paid for what?" confusion | All expenses tracked with participant addresses |
-| Trust issues in group payments | Settlements happen on-chain — fully transparent |
-| Slow bank transfers for settling | Stellar transactions settle in ~5 seconds |
-| High fees on payment apps | Stellar fees are < 0.00001 XLM (~$0.000001) |
+- 🎓 Students splitting roommate bills and trip expenses
+- 🍕 Friends dividing restaurant or grocery costs
+- 💼 Small teams tracking shared project expenses
+- 👥 Any group that needs transparent, fair payment tracking
 
-### Target Users
-- 🎓 **Students** — roommates, trips, group expenses
-- 💼 **Freelancers & teams** — project cost splitting
-- 🍕 **Friends** — splitting restaurant bills, groceries
-- 👥 **Any group** needing transparent payment tracking
+### Why Stellar?
+
+| Challenge | How Debtrix Solves It |
+|---|---|
+| Slow bank transfers | Stellar transactions settle in ~5 seconds |
+| High payment app fees | Stellar fees are < 0.00001 XLM (~$0.000001) |
+| "Who paid what?" disputes | All expenses and settlements recorded transparently |
+| Trust issues in group payments | Blockchain settlements — no middleman required |
 
 ---
 
-## 🚀 Features (Level 1 — White Belt)
+## ✅ White Belt Requirements Coverage
 
-### 💳 Wallet Integration
-- **Connect/Disconnect** Freighter wallet with one click
-- Session persistence across page reloads via `localStorage`
-- Automatic reconnection on revisiting the app
-- Network badge showing **TESTNET** status
+| Requirement | Implementation |
+|---|---|
+| Freighter wallet setup | Integrated via `@stellar/freighter-api` v6 |
+| Stellar Testnet | Hardcoded to Testnet; TESTNET badge shown in UI |
+| Wallet connect | One-click connect with popup via `requestAccess()` |
+| Wallet disconnect | Clears session from memory and localStorage |
+| Fetch XLM balance | Polled every 15s from Stellar Horizon Testnet API |
+| Display balance in UI | Shown prominently in the header after connection |
+| Send XLM transaction | Full settle flow: build → sign → submit on Testnet |
+| Transaction feedback | Success/failure state + transaction hash shown in UI |
+| Error handling | Covers no wallet, declined tx, insufficient balance |
+
+---
+
+## 🚀 Features
+
+### 💳 Wallet
+- Connect and disconnect Freighter wallet in one click
+- Session persists across page reloads via localStorage
+- Live **TESTNET** network badge in the header
 
 ### 💰 Balance Display
-- Real-time **XLM balance** fetched from Stellar Horizon Testnet API
-- Auto-refreshing balance polling (every 15 seconds)
-- Graceful handling of unfunded accounts
+- Real-time XLM balance fetched from the Stellar Horizon API
+- Auto-refreshes every 15 seconds
+- Gracefully handles unfunded accounts
 
 ### 🧾 Expense Management
-- Add shared expenses with description, amount, and participants
-- Support for **Equal Split** and **Manual Split** modes
-- Participants identified by Stellar public keys (`G...` addresses)
-- Full expense persistence in `localStorage` (survives page reloads)
+- Add shared expenses with a description, amount, and participants
+- Equal split or custom manual split modes
+- Participants are identified by Stellar public keys (`G...` addresses)
+- Expenses persist in localStorage and survive page reloads
 
 ### ⚖️ Debt Engine
-- Intelligent **greedy two-pointer algorithm** that simplifies debts
-- Minimizes the total number of transactions needed to settle all debts
-- Real-time "You Owe" / "You're Owed" dashboard
+- Greedy two-pointer algorithm that minimizes settlement transactions
+- Real-time **You Owe** and **You're Owed** dashboard cards
 
 ### 💸 XLM Settlement
-- One-click debt settlement via XLM payment transactions
-- Transaction signing through **Freighter wallet**
-- Real-time feedback: pending → success/failure states
-- Transaction hash display with direct link to [Stellar Expert](https://stellar.expert) block explorer
+- One-click debt settlement with XLM
+- Transaction built using `@stellar/stellar-sdk`, signed by Freighter
+- Feedback modal shows: Pending → Success / Failure
+- Transaction hash displayed with a direct link to [Stellar Expert](https://stellar.expert) block explorer
 
-### 🎨 Premium UI
-- **Three.js WebGL** animated background with a light copper wireframe globe
-- Ultra-minimal dark glassmorphism design
-- Smooth micro-animations and responsive layout
-- Google Fonts typography (Inter + Space Grotesk)
-
----
-
-## 🏗️ System Design & Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        DEBTRIX ARCHITECTURE                         │
-│                     Level 1 — White Belt MVP                        │
-└──────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────┐
-│       PRESENTATION LAYER    │
-│                             │
-│  ┌───────────────────────┐  │     ┌─────────────────────────────┐
-│  │   AnimatedBackground  │  │     │     External Services       │
-│  │   (Three.js Canvas)   │  │     │                             │
-│  └───────────────────────┘  │     │  ┌───────────────────────┐  │
-│  ┌───────────────────────┐  │     │  │  Stellar Horizon API  │  │
-│  │   Header + WalletBar  │  │     │  │  (Testnet)            │  │
-│  └───────────────────────┘  │     │  │  - Account info       │  │
-│  ┌───────────────────────┐  │     │  │  - Submit tx          │  │
-│  │   App (Main Shell)    │  │     │  │  - Balance fetch      │  │
-│  │  ┌─────┐ ┌──────────┐│  │     │  └───────────────────────┘  │
-│  │  │Stats│ │Tab System ││  │     │  ┌───────────────────────┐  │
-│  │  └─────┘ └──────────┘│  │     │  │  Freighter Extension  │  │
-│  │  ┌──────────────────┐│  │     │  │  - Key management     │  │
-│  │  │  ExpenseList     ││  │◄────►│  │  - Tx signing         │  │
-│  │  │  DebtSummary     ││  │     │  │  - Access control      │  │
-│  │  │  ExpenseForm     ││  │     │  └───────────────────────┘  │
-│  │  │  SettleModal     ││  │     └─────────────────────────────┘
-│  │  │  TxFeedback      ││  │
-│  │  └──────────────────┘│  │
-│  └───────────────────────┘  │
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│      BUSINESS LOGIC LAYER   │
-│         (React Hooks)       │
-│                             │
-│  ┌────────────────────────┐ │
-│  │  useWallet             │ │  → Freighter API (connect/disconnect/getAddress)
-│  ├────────────────────────┤ │
-│  │  useBalance            │ │  → Horizon API (GET /accounts/{id})
-│  ├────────────────────────┤ │
-│  │  useExpenses           │ │  → localStorage (CRUD + debt graph algorithm)
-│  ├────────────────────────┤ │
-│  │  useTransaction        │ │  → Stellar SDK (build tx) + Freighter (sign) + Horizon (submit)
-│  └────────────────────────┘ │
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│      DATA / STORAGE LAYER   │
-│                             │
-│  ┌────────────────────────┐ │
-│  │  localStorage          │ │  → Expenses, wallet pubkey (persistent across reloads)
-│  ├────────────────────────┤ │
-│  │  Stellar Testnet       │ │  → XLM balances, transaction history (on-chain)
-│  └────────────────────────┘ │
-└─────────────────────────────┘
-```
-
-### Data Flow
-
-```
-User Action          Hook              External Service         Result
-───────────          ────              ────────────────         ──────
-Connect Wallet  →  useWallet      →  Freighter API         →  Public key stored
-View Balance    →  useBalance     →  Horizon /accounts     →  XLM balance displayed
-Add Expense     →  useExpenses    →  localStorage          →  Expense saved + debts recalculated
-Settle Debt     →  useTransaction →  SDK build → Freighter →  Signed XDR → Horizon submit → Hash
-                                      sign                     displayed with explorer link
-```
-
-### Debt Simplification Algorithm
-
-The debt engine uses a **greedy two-pointer approach** to minimize payment transactions:
-
-```
-Input:  Alice owes Bob 10 XLM, Bob owes Carol 6 XLM, Alice owes Carol 4 XLM
-        → Net balances: Alice: -14, Bob: +4, Carol: +10
-
-Step 1: Sort by balance (debtors first, creditors last)
-Step 2: Match largest debtor with largest creditor
-Step 3: Transfer min(|debt|, |credit|), adjust balances
-Step 4: Repeat until all balances are zero
-
-Output: Alice → Carol: 10 XLM, Alice → Bob: 4 XLM  (2 transactions instead of 3)
-```
+### 🎨 UI / UX
+- Three.js WebGL animated background (3D copper wireframe globe + starfield)
+- Ultra-minimal dark glassmorphism design system
+- Smooth micro-animations and fully responsive layout
 
 ---
 
 ## 📸 Screenshots
 
 ### Landing Page — Wallet Disconnected
-The home screen featuring the animated 3D copper wireframe globe, starfield background, and the wallet connection prompt.
 
 ![Landing Page](screenshots/landing.png)
 
 ### Dashboard — Wallet Connected & Balance Displayed
-After connecting Freighter, the dashboard shows the live XLM balance (10,000 XLM on Testnet), expense statistics, and the tabbed interface for managing expenses and debts.
 
-![Wallet Connected & Balance](screenshots/balance.png)
+![Wallet Connected and Balance](screenshots/balance.png)
+
+---
+
+## 🏗️ System Design & Architecture
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              DEBTRIX — SYSTEM ARCHITECTURE                      ║
+║                  Level 1 · White Belt MVP                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│                     PRESENTATION LAYER                       │
+│                                                              │
+│  AnimatedBackground.jsx  ── Three.js WebGL Canvas            │
+│  Header.jsx              ── Logo + wallet bar slot           │
+│  WalletBar.jsx           ── Connect/disconnect + balance     │
+│  App.jsx                 ── Shell: stats, tabs, modals       │
+│    ├── ExpenseForm.jsx   ── Add expense modal                │
+│    ├── ExpenseList.jsx   ── Scrollable expense cards         │
+│    ├── DebtSummary.jsx   ── Debt cards with settle button    │
+│    ├── SettleModal.jsx   ── Tx confirmation + status         │
+│    └── TransactionFeedback.jsx ── Toast notifications        │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ Props / Callbacks
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   BUSINESS LOGIC LAYER                       │
+│                     (Custom Hooks)                           │
+│                                                              │
+│  useWallet.js       ── connect · disconnect · persist key    │
+│  useBalance.js      ── fetch XLM balance (polls 15s)         │
+│  useExpenses.js     ── CRUD expenses · debt algorithm        │
+│  useTransaction.js  ── build tx · sign · submit · feedback   │
+└───────┬─────────────────────────────┬────────────────────────┘
+        │                             │
+        ▼                             ▼
+┌────────────────────┐   ┌────────────────────────────────────┐
+│  LOCAL STORAGE     │   │       STELLAR NETWORK              │
+│                    │   │                                    │
+│  debtrix_wallet    │   │  Horizon Testnet API               │
+│  debtrix_expenses  │   │  ├── GET /accounts/{id}            │
+│                    │   │  └── POST /transactions            │
+│  (survives reload) │   │                                    │
+└────────────────────┘   │  Freighter Extension               │
+                         │  ├── requestAccess()               │
+                         │  ├── getAddress()                  │
+                         │  └── signTransaction()             │
+                         └────────────────────────────────────┘
+```
+
+### Request Flow — Settling a Debt
+
+```
+User clicks "Settle"
+        │
+        ▼
+useTransaction.sendXLM()
+        │
+        ├─ 1. Validate destination address (stellar-sdk StrKey)
+        ├─ 2. Load sender account from Horizon
+        ├─ 3. Check available balance (reserves 1 XLM)
+        ├─ 4. Build TransactionBuilder with payment operation
+        ├─ 5. Sign XDR via Freighter popup
+        ├─ 6. Submit signed transaction to Horizon
+        │
+        ▼
+   Success → toast shows tx hash + Stellar Expert link
+   Failure → toast shows human-readable error message
+```
+
+### Debt Simplification Algorithm
+
+```
+Problem: N people owe each other money → minimize number of payments
+
+Input Example:
+  Alice  owes Bob  10 XLM
+  Bob    owes Carol 6 XLM
+  Alice  owes Carol 4 XLM
+
+Step 1 — Calculate net balances:
+  Alice:  -14 XLM  (net debtor)
+  Bob:    + 4 XLM  (net creditor)
+  Carol:  +10 XLM  (net creditor)
+
+Step 2 — Greedy two-pointer:
+  Match largest debtor (Alice) with largest creditor (Carol)
+  Transfer min(14, 10) = 10 → Alice pays Carol 10 XLM
+  Remaining: Alice -4, Carol 0, Bob +4
+
+  Match Alice with Bob
+  Transfer 4 → Alice pays Bob 4 XLM
+
+Output:
+  ✅ 2 transactions instead of 3 (33% reduction)
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | React 19 + Vite 8 | Component-based UI with HMR |
-| **Styling** | Vanilla CSS | Custom glassmorphism design system |
-| **3D Graphics** | Three.js + React Three Fiber + Drei | Animated WebGL background |
-| **Blockchain SDK** | `@stellar/stellar-sdk` | Transaction building & Horizon API |
-| **Wallet** | `@stellar/freighter-api` v6 | Wallet connection & transaction signing |
-| **Icons** | Lucide React | Lightweight SVG icon set |
-| **Fonts** | Google Fonts (Inter, Space Grotesk) | Premium typography |
+|---|---|---|
+| Frontend | React 19 + Vite 8 | Component-based UI with fast HMR |
+| Styling | Vanilla CSS | Custom glassmorphism design tokens |
+| 3D Background | Three.js + React Three Fiber | Animated WebGL globe + starfield |
+| Blockchain SDK | `@stellar/stellar-sdk` | Transaction building + Horizon API |
+| Wallet | `@stellar/freighter-api` v6 | Wallet connection + tx signing |
+| Icons | Lucide React | Lightweight SVG icons |
+| Fonts | Google Fonts (Inter, Space Grotesk) | Premium typography |
 
 ---
 
@@ -198,12 +210,12 @@ After connecting Freighter, the dashboard shows the live XLM balance (10,000 XLM
 
 ### Prerequisites
 
-- **Node.js** v18 or higher
-- **npm** v9 or higher
-- **Freighter Wallet** browser extension ([Install here](https://www.freighter.app/))
-- Freighter set to **Stellar Testnet**
+- **Node.js** v18+
+- **npm** v9+
+- [Freighter Wallet](https://www.freighter.app/) browser extension installed
+- Freighter set to **Stellar Testnet** (Settings → Network → Testnet)
 
-### Installation
+### Local Development
 
 ```bash
 # 1. Clone the repository
@@ -217,13 +229,13 @@ npm install
 npm run dev
 ```
 
-The app will be available at **http://localhost:5173/**
+Open **http://localhost:5173/** in your browser.
 
 ### Fund Your Testnet Wallet
 
-1. Open Freighter and switch to **Testnet**
-2. Copy your public key (`G...` address)
-3. Visit the [Stellar Friendbot](https://friendbot.stellar.org?addr=YOUR_PUBLIC_KEY) to get 10,000 test XLM
+1. Open Freighter → switch to **Testnet**
+2. Copy your `G...` public key
+3. Visit [Stellar Friendbot](https://friendbot.stellar.org/?addr=YOUR_PUBLIC_KEY) to receive 10,000 test XLM instantly
 
 ### Production Build
 
@@ -238,54 +250,54 @@ npm run preview
 
 ```
 Debtrix/
-├── index.html                    # Entry HTML with SEO meta tags
-├── vite.config.js                # Vite config with buffer polyfill
-├── package.json                  # Dependencies and scripts
-├── mind.md                       # Project roadmap & decisions tracker
+├── index.html                      # HTML entry point with SEO meta tags
+├── vite.config.js                  # Vite + Tailwind + Buffer polyfill config
+├── package.json
+├── mind.md                         # Project roadmap and decision log
 │
 ├── src/
-│   ├── main.jsx                  # React entry point
-│   ├── App.jsx                   # Main app shell (stats, tabs, modals)
-│   ├── index.css                 # Global design system (tokens, components)
+│   ├── main.jsx                    # React entry point
+│   ├── App.jsx                     # Main app shell
+│   ├── index.css                   # Global design system
 │   │
 │   ├── hooks/
-│   │   ├── useWallet.js          # Freighter connect/disconnect/persist
-│   │   ├── useBalance.js         # XLM balance polling from Horizon
-│   │   ├── useExpenses.js        # Expense CRUD + debt simplification
-│   │   └── useTransaction.js     # Build, sign, submit XLM payments
+│   │   ├── useWallet.js            # Wallet connect / disconnect / session
+│   │   ├── useBalance.js           # XLM balance polling
+│   │   ├── useExpenses.js          # Expense CRUD + debt algorithm
+│   │   └── useTransaction.js       # Build, sign, submit XLM payments
 │   │
 │   └── components/
-│       ├── AnimatedBackground.jsx  # Three.js WebGL canvas (globe + stars)
-│       ├── Header.jsx              # Top navigation bar with logo
-│       ├── WalletBar.jsx           # Wallet connection status & controls
-│       ├── ExpenseForm.jsx         # Modal form for adding expenses
-│       ├── ExpenseList.jsx         # Scrollable list of all expenses
-│       ├── DebtSummary.jsx         # Simplified debt cards with settle button
-│       ├── SettleModal.jsx         # Transaction confirmation & status modal
-│       └── TransactionFeedback.jsx # Toast notifications for tx results
+│       ├── AnimatedBackground.jsx  # Three.js WebGL animated canvas
+│       ├── Header.jsx              # Top navigation bar
+│       ├── WalletBar.jsx           # Wallet status and controls
+│       ├── ExpenseForm.jsx         # Add expense modal form
+│       ├── ExpenseList.jsx         # Expense list display
+│       ├── DebtSummary.jsx         # Simplified debt cards
+│       ├── SettleModal.jsx         # Settlement confirmation modal
+│       └── TransactionFeedback.jsx # Toast notification system
 │
 └── screenshots/
-    ├── landing.png               # Wallet disconnected state
-    └── balance.png               # Wallet connected + balance displayed
+    ├── landing.png                 # Wallet disconnected state
+    └── balance.png                 # Wallet connected with balance shown
 ```
 
 ---
 
-## 🥋 Roadmap
+## 🥋 Levels Roadmap
 
-| Level | Belt | Status | Focus |
-|-------|------|--------|-------|
-| **1** | ⚪ White | ✅ Complete | Wallet, balance, transactions, UI |
-| **2** | 🟡 Yellow | 🔜 Next | Soroban smart contracts, multi-wallet |
-| **3** | 🟠 Orange | Planned | Dashboard, history, tests |
-| **4** | 🟢 Green | Planned | Groups, auto-settlement, CI/CD |
+| Level | Belt | Status | Description |
+|---|---|---|---|
+| 1 | ⚪ White | ✅ **Complete** | Wallet · Balance · Transactions · UI |
+| 2 | 🟡 Yellow | 🔜 Next | Soroban smart contracts · Multi-wallet |
+| 3 | 🟠 Orange | Planned | Dashboard · Expense history · Tests |
+| 4 | 🟢 Green | Planned | Auto-settlement · CI/CD · Mobile |
 
 ---
 
-## 📝 Commit History (Level 1)
+## 📝 Commit History — Level 1
 
-| # | Commit Message |
-|---|---------------|
+| # | Commit |
+|---|---|
 | 1 | `init: setup Vite + React + Tailwind project` |
 | 2 | `feat: implement wallet connect and disconnect` |
 | 3 | `feat: fetch and display XLM balance` |
@@ -294,27 +306,16 @@ Debtrix/
 
 ---
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/your-feature`)
-3. Commit your changes (`git commit -m 'feat: add your feature'`)
-4. Push to the branch (`git push origin feat/your-feature`)
-5. Open a Pull Request
-
----
-
 ## 📄 License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT © [subhadip890](https://github.com/subhadip890)
 
 ---
 
 <div align="center">
 
-**Built with ⚡ on Stellar Testnet**
+**Built on the Stellar Testnet · Powered by XLM**
 
-[Stellar](https://stellar.org) · [Freighter](https://freighter.app) · [Horizon API](https://horizon-testnet.stellar.org)
+[Stellar](https://stellar.org) · [Freighter Wallet](https://freighter.app) · [Horizon Testnet](https://horizon-testnet.stellar.org) · [Stellar Expert](https://stellar.expert)
 
 </div>
-]]>
