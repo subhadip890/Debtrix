@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { isConnected, requestAccess, getPublicKey } from '@stellar/freighter-api'
+import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api'
 
 export function useWallet() {
   const [publicKey, setPublicKey] = useState(null)
@@ -13,18 +13,22 @@ export function useWallet() {
     async function checkSession() {
       try {
         const storedKey = localStorage.getItem('debtrix_wallet')
-        if (!storedKey) return
+        if (!storedKey) {
+          setIsInitializing(false)
+          return
+        }
         
-        const hasFreighter = await isConnected()
+        const { isConnected: hasFreighter } = await isConnected()
         if (!hasFreighter) {
           localStorage.removeItem('debtrix_wallet')
+          setIsInitializing(false)
           return
         }
         
         // If stored key exists, verify we can still get the public key quietly
-        const key = await getPublicKey()
-        if (key) {
-          setPublicKey(key)
+        const { address, error } = await getAddress()
+        if (address && !error) {
+          setPublicKey(address)
         } else {
           localStorage.removeItem('debtrix_wallet')
         }
@@ -42,21 +46,25 @@ export function useWallet() {
     setError(null)
     setConnecting(true)
     try {
-      const hasFreighter = await isConnected()
+      const { isConnected: hasFreighter } = await isConnected()
       if (!hasFreighter) {
         throw new Error('Freighter wallet is not installed. Please add the extension.')
       }
 
       // requestAccess triggers the Freighter popup and returns the public key
-      const key = await requestAccess()
+      const { address, error } = await requestAccess()
       
-      if (!key) {
+      if (error) {
+        throw new Error(error)
+      }
+      
+      if (!address) {
         throw new Error('Connection request was declined or wallet is locked.')
       }
 
-      setPublicKey(key)
+      setPublicKey(address)
       setNetwork('TESTNET') // Hardcoded for Level 1 scope
-      localStorage.setItem('debtrix_wallet', key)
+      localStorage.setItem('debtrix_wallet', address)
       
     } catch (err) {
       console.error('Wallet connection error:', err)
