@@ -1,6 +1,6 @@
 import { Zap } from 'lucide-react'
 
-export default function Header() {
+export default function Header({ rightContent }) {
   return (
     <header
       style={{
@@ -65,9 +65,10 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Right slot – filled by parent via children / slot pattern */}
-        <div id="header-right-slot" />
+        {/* Right slot – filled by parent */}
+        <div>{rightContent}</div>
       </div>
     </header>
   )
 }
+

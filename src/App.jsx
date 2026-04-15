@@ -88,11 +88,8 @@ export default function App() {
   return (
     <>
       {/* Header */}
-      <Header />
-
-      {/* Wallet bar injected via portal into header right slot */}
-      {typeof document !== 'undefined' && document.getElementById('header-right-slot') &&
-        createPortal(
+      <Header
+        rightContent={
           <WalletBar
             publicKey={publicKey}
             network={network}
@@ -101,10 +98,9 @@ export default function App() {
             connecting={connecting}
             onConnect={handleConnect}
             onDisconnect={disconnectWallet}
-          />,
-          document.getElementById('header-right-slot')
-        )
-      }
+          />
+        }
+      />
 
       {/* Main */}
       <main style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
