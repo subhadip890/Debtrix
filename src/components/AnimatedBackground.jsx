@@ -15,14 +15,14 @@ function WireframeGeometry() {
 
   return (
     <mesh ref={meshRef}>
-      <icosahedronGeometry args={[4, 1]} />
+      <icosahedronGeometry args={[5.5, 1]} />
       <meshStandardMaterial
-        color="#10b981"
+        color="#d98a5e"
         wireframe={true}
         transparent={true}
         opacity={0.15}
-        emissive="#06b6d4"
-        emissiveIntensity={0.5}
+        emissive="#fcb086"
+        emissiveIntensity={0.6}
       />
     </mesh>
   )
@@ -41,8 +41,8 @@ function FloatingRing() {
 
   return (
     <mesh ref={meshRef}>
-      <torusGeometry args={[8, 0.02, 16, 100]} />
-      <meshBasicMaterial color="#10b981" transparent={true} opacity={0.1} />
+      <torusGeometry args={[9, 0.02, 16, 100]} />
+      <meshBasicMaterial color="#d98a5e" transparent={true} opacity={0.15} />
     </mesh>
   )
 }
@@ -65,7 +65,7 @@ export default function AnimatedBackground() {
         <Stars 
           radius={50} 
           depth={50} 
-          count={3000} 
+          count={800} 
           factor={4} 
           saturation={0} 
           fade 
