@@ -7,6 +7,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=flat-square&logo=vercel)](https://debtrix-theta.vercel.app/)
 
 ---
 
@@ -80,6 +81,14 @@
 - Three.js WebGL animated background (3D copper wireframe globe + starfield)
 - Ultra-minimal dark glassmorphism design system
 - Smooth micro-animations and fully responsive layout
+
+---
+
+## 🌐 Live Demo
+
+**[https://debtrix-theta.vercel.app/](https://debtrix-theta.vercel.app/)**
+
+> Deployed on Vercel — connect your Freighter wallet (set to **Stellar Testnet**) to try it live.
 
 ---
 
