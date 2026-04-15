@@ -5,7 +5,7 @@ export default function Header({ rightContent }) {
     <header
       style={{
         borderBottom: '1px solid var(--border)',
-        background: 'rgba(7, 11, 20, 0.8)',
+        background: 'rgba(0, 0, 0, 0.3)',
         backdropFilter: 'blur(20px)',
         position: 'sticky',
         top: 0,
@@ -30,11 +30,12 @@ export default function Header({ rightContent }) {
               width: '36px',
               height: '36px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, var(--accent-from), var(--accent-to))',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px var(--accent-glow)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             }}
           >
             <Zap size={18} color="#fff" fill="#fff" />

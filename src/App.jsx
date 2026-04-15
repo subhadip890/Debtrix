@@ -179,12 +179,13 @@ export default function App() {
                 width: '80px',
                 height: '80px',
                 borderRadius: '20px',
-                background: 'linear-gradient(135deg, var(--accent-from), var(--accent-to))',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1.5rem',
-                boxShadow: '0 8px 30px var(--accent-glow)',
+                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
               }}
             >
               <Zap size={36} color="#fff" fill="#fff" />
@@ -340,15 +341,17 @@ function TabButton({ active, onClick, icon, label, id }) {
         gap: '0.375rem',
         padding: '0.5rem 0.875rem',
         borderRadius: '7px',
-        border: 'none',
+        border: '1px solid',
+        borderColor: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
         cursor: 'pointer',
         fontSize: '0.8125rem',
-        fontWeight: 600,
+        fontWeight: 500,
         fontFamily: 'Inter, sans-serif',
-        background: active ? 'linear-gradient(135deg, var(--accent-from), var(--accent-to))' : 'transparent',
-        color: active ? '#fff' : 'var(--text-muted)',
+        background: active ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+        color: active ? '#ffffff' : 'var(--text-muted)',
         transition: 'all 0.2s',
-        boxShadow: active ? '0 2px 8px var(--accent-glow)' : 'none',
+        boxShadow: active ? '0 2px 8px rgba(0, 0, 0, 0.2)' : 'none',
+        backdropFilter: active ? 'blur(4px)' : 'none',
       }}
     >
       {icon}
@@ -356,3 +359,4 @@ function TabButton({ active, onClick, icon, label, id }) {
     </button>
   )
 }
+
