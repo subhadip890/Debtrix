@@ -13,6 +13,7 @@ import ExpenseList from './components/ExpenseList'
 import DebtSummary from './components/DebtSummary'
 import SettleModal from './components/SettleModal'
 import TransactionFeedback from './components/TransactionFeedback'
+import AnimatedBackground from './components/AnimatedBackground'
 
 export default function App() {
   const { publicKey, network, isConnected, connecting, error: walletError, connectWallet, disconnectWallet } = useWallet()
@@ -87,6 +88,9 @@ export default function App() {
 
   return (
     <>
+      {/* 3D Animated WebGL Background */}
+      <AnimatedBackground />
+
       {/* Header */}
       <Header
         rightContent={
