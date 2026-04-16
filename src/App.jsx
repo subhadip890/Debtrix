@@ -5,6 +5,7 @@ import { useWallet } from './hooks/useWallet'
 import { useBalance } from './hooks/useBalance'
 import { useTransaction } from './hooks/useTransaction'
 import { useContract } from './hooks/useContract'
+import { useRewardBalance } from './hooks/useRewardBalance'
 import appCache from './utils/cache'
 
 import Header from './components/Header'
@@ -23,6 +24,7 @@ const BgFallback = () => (
 export default function App() {
   const { publicKey, network, isConnected, connecting, isInitializing, error: walletError, connectWallet, disconnectWallet } = useWallet()
   const { displayBalance, loading: balanceLoading, refetch: refetchBalance } = useBalance(publicKey)
+  const { dbxBalance, loading: rewardLoading, refreshBalance: refreshReward } = useRewardBalance(publicKey)
   const { status: txStatus, txHash, error: txError, sendXLM, reset: resetTx } = useTransaction()
   const { recordPaymentOnChain } = useContract()
 
@@ -90,6 +92,8 @@ export default function App() {
     // Invalidate cached contract data so RecentActivity fetches fresh blockchain state
     appCache.invalidate('contract:payments')
     appCache.invalidate(`balance:${publicKey}`)
+    appCache.invalidate(`reward:${publicKey}`)
+    refreshReward()
     pushNotification({
       status: 'success',
       txHash: lastHash,
@@ -153,6 +157,8 @@ export default function App() {
             network={network}
             displayBalance={displayBalance}
             balanceLoading={balanceLoading}
+            dbxBalance={dbxBalance}
+            rewardLoading={rewardLoading}
             connecting={connecting}
             onConnect={handleConnect}
             onDisconnect={disconnectWallet}

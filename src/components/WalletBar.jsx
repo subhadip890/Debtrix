@@ -6,7 +6,7 @@ function truncate(key) {
   return `${key.slice(0, 4)}…${key.slice(-4)}`
 }
 
-export default function WalletBar({ publicKey, displayBalance, balanceLoading, connecting, onConnect, onDisconnect, network }) {
+export default function WalletBar({ publicKey, displayBalance, balanceLoading, dbxBalance, rewardLoading, connecting, onConnect, onDisconnect, network }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -48,7 +48,32 @@ export default function WalletBar({ publicKey, displayBalance, balanceLoading, c
         {network || 'TESTNET'}
       </span>
 
-      {/* Balance */}
+      {/* DBTX Reward Balance */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.375rem',
+          padding: '0.375rem 0.875rem',
+          borderRadius: '999px',
+          background: 'rgba(167, 139, 250, 0.1)',
+          border: '1px solid rgba(167, 139, 250, 0.2)',
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          color: '#c084fc',
+        }}
+      >
+        {rewardLoading ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <>
+            <span>{dbxBalance}</span>
+            <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>DBTX</span>
+          </>
+        )}
+      </div>
+
+      {/* XLM Balance */}
       <div
         style={{
           display: 'flex',
