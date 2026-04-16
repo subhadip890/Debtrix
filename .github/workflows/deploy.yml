@@ -25,7 +25,7 @@ jobs:
           cargo build --target wasm32-unknown-unknown --release
 
       - name: Install System Dependencies
-        run: sudo apt-get install -y libdbus-1-dev pkg-config
+        run: sudo apt-get install -y libdbus-1-dev pkg-config libudev-dev libusb-1.0-0-dev
 
       - name: Install Stellar CLI
         run: |
