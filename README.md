@@ -23,7 +23,56 @@ Every single payment is written permanently into a globally accessible Soroban S
 4. **Settle Payment:** The app executes sequential `payment` operations directly on the Stellar testnet, then invokes a Soroban Host Function to write a permanent `PaymentLog` struct to the Smart Contract.
 5. **Live Feed:** The "Live Smart Contract Feed" runs continuous `simulateTransaction` queries against the deployed Smart Contract, pushing real-time global payments directly to the UI.
 
-### 🏗️ System Design & Architecture
+### 🏗️ System Design & Architecture Flow
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                     PRESENTATION LAYER                       │
+│  AnimatedBackground.jsx  ── Three.js WebGL Canvas            │
+│  App.jsx                 ── Core Application Shell           │
+│    ├── DirectPayment.jsx ── Split payment UI                 │
+│    ├── RecentActivity.jsx── Live Smart Contract Feed         │
+│    └── TransactionFeedback.jsx ── Status Toasts              │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ Props / Callbacks
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   BUSINESS LOGIC LAYER                       │
+│  useWallet.js       ── Wallet session & persistence          │
+│  useTransaction.js  ── Build tx · Sign via Kit · Submit      │
+│  useContract.js     ── invokeHostFunction & SDK queries      │
+└───────┬─────────────────────────────┬────────────────────────┘
+        │                             │
+        ▼                             ▼
+┌────────────────────┐   ┌────────────────────────────────────┐
+│   STELLAR NETWORK  │   │       SMART CONTRACT (SOROBAN)     │
+│                    │   │                                    │
+│  Horizon Testnet   │   │  DebtrixContract                   │
+│  ├── GET /accounts │   │  ├── record_payment() (write)      │
+│  └── POST /txs     │   │  └── get_payments() (read)         │
+└────────────────────┘   └────────────────────────────────────┘
+```
+
+#### Request Flow — Split Payment & Record On-Chain
+
+```text
+User clicks "Settle"
+        │
+        ▼
+useTransaction.sendXLM()
+        ├─ 1. Build TransactionBuilder with payment ops for each receiver
+        ├─ 2. Sign XDR via Multi-Wallet Provider Extension
+        ├─ 3. Submit signed transaction to Horizon Testnet
+        │
+        ▼ (on success)
+useContract.recordPaymentOnChain()
+        ├─ 1. Format PaymentLog ScVal Map
+        ├─ 2. build invokeHostFunction operation
+        ├─ 3. simulateTransaction → sign → sendTransaction
+        │
+        ▼ (on success)
+RecentActivity Feed auto-refreshes by polling get_payments()
+```
 
 | Feature | Implementation Detail |
 |---|---|
