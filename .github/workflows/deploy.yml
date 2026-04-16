@@ -37,6 +37,10 @@ jobs:
         run: |
           cd contracts/expense_splitter
           stellar keys generate alice --network testnet
+          ALICE_ADDRESS=$(stellar keys address alice)
+          echo "Funding alice account: $ALICE_ADDRESS"
+          curl -s "https://friendbot.stellar.org?addr=$ALICE_ADDRESS" > /dev/null
+          echo "Account funded!"
           echo "================================================="
           echo "CONTRACT ID:"
           echo "================================================="
