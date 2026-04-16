@@ -222,7 +222,7 @@ Run `npm test` to reproduce:
 
 #### Live Demo Link
 
-> *(Deploy to Vercel or Netlify and paste the live URL here)*
+**[https://debtrix-theta.vercel.app/](https://debtrix-theta.vercel.app/)**
 
 #### Demo Video (1 minute)
 
