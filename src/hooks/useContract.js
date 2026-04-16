@@ -5,8 +5,8 @@ import { useWallet } from './useWallet'
 const HORIZON_URL = 'https://horizon-testnet.stellar.org'
 const NETWORK_PASSPHRASE = StellarSdk.Networks.TESTNET
 
-// Replace this with the actual deployed contract ID after running `stellar contract deploy`
-export const CONTRACT_ID = 'CACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' 
+// ✅ Deployed contract ID on Stellar Testnet
+export const CONTRACT_ID = 'CA5OIXRV6XOLVWSM2OOQEJZRK3XNN7T7NLTQ32IZH6ZWXIWZO5JKT6R3'
 
 export function useContract() {
   const { getKit, publicKey } = useWallet()
@@ -20,44 +20,39 @@ export function useContract() {
     setError(null)
   }, [])
 
-  // Write to contract
-  const submitExpenseToChain = useCallback(async (expenseData) => {
+  // Record a direct payment on-chain
+  const recordPaymentOnChain = useCallback(async (paymentData) => {
     setTxStatus('pending')
     setTxHash(null)
     setError(null)
 
     try {
-      if(!publicKey) throw new Error("Wallet not connected")
+      if (!publicKey) throw new Error('Wallet not connected')
 
       const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
       const account = await server.getAccount(publicKey)
 
-      // Convert our JS object into Soroban ScVal map
-      const expenseArgs = StellarSdk.xdr.ScVal.scvMap([
+      // Build the PaymentLog struct as a Soroban ScVal map
+      const paymentArgs = StellarSdk.xdr.ScVal.scvMap([
         new StellarSdk.xdr.ScMapEntry({
-          key: StellarSdk.nativeToScVal('id', {type: 'string'}),
-          val: StellarSdk.nativeToScVal(expenseData.id, {type: 'string'})
+          key: StellarSdk.nativeToScVal('id', { type: 'string' }),
+          val: StellarSdk.nativeToScVal(paymentData.id, { type: 'string' }),
         }),
         new StellarSdk.xdr.ScMapEntry({
-          key: StellarSdk.nativeToScVal('description', {type: 'string'}),
-          val: StellarSdk.nativeToScVal(expenseData.description, {type: 'string'})
+          key: StellarSdk.nativeToScVal('from', { type: 'string' }),
+          val: StellarSdk.nativeToScVal(paymentData.from, { type: 'string' }),
         }),
         new StellarSdk.xdr.ScMapEntry({
-          key: StellarSdk.nativeToScVal('amount', {type: 'string'}),
-          val: StellarSdk.nativeToScVal(expenseData.amount, {type: 'string'})
+          key: StellarSdk.nativeToScVal('to', { type: 'string' }),
+          val: StellarSdk.nativeToScVal(paymentData.to, { type: 'string' }),
         }),
         new StellarSdk.xdr.ScMapEntry({
-          key: StellarSdk.nativeToScVal('paid_by', {type: 'string'}),
-          val: StellarSdk.nativeToScVal(expenseData.paidBy, {type: 'string'})
-        }),
-        // Participants is array of strings
-        new StellarSdk.xdr.ScMapEntry({
-          key: StellarSdk.nativeToScVal('participants', {type: 'string'}),
-          val: StellarSdk.xdr.ScVal.scvVec(expenseData.participants.map(p => StellarSdk.nativeToScVal(p, {type: 'string'})))
+          key: StellarSdk.nativeToScVal('amount', { type: 'string' }),
+          val: StellarSdk.nativeToScVal(String(paymentData.amount), { type: 'string' }),
         }),
         new StellarSdk.xdr.ScMapEntry({
-          key: StellarSdk.nativeToScVal('date', {type: 'string'}),
-          val: StellarSdk.nativeToScVal(expenseData.date, {type: 'u64'})
+          key: StellarSdk.nativeToScVal('date', { type: 'string' }),
+          val: StellarSdk.nativeToScVal(paymentData.date, { type: 'u64' }),
         }),
       ])
 
@@ -65,35 +60,36 @@ export function useContract() {
         fee: StellarSdk.BASE_FEE,
         networkPassphrase: NETWORK_PASSPHRASE,
       })
-      .addOperation(StellarSdk.Operation.invokeHostFunction({
-        func: StellarSdk.xdr.HostFunction.hostFunctionTypeInvokeContract(
-          new StellarSdk.xdr.InvokeContractArgs({
-            contractAddress: new StellarSdk.Address(CONTRACT_ID).toScAddress(),
-            functionName: 'add_expense',
-            args: [expenseArgs],
+        .addOperation(
+          StellarSdk.Operation.invokeHostFunction({
+            func: StellarSdk.xdr.HostFunction.hostFunctionTypeInvokeContract(
+              new StellarSdk.xdr.InvokeContractArgs({
+                contractAddress: new StellarSdk.Address(CONTRACT_ID).toScAddress(),
+                functionName: 'record_payment',
+                args: [paymentArgs],
+              })
+            ),
+            auth: [],
           })
-        ),
-        auth: []
-      }))
-      .setTimeout(180)
+        )
+        .setTimeout(180)
 
       let transaction = txBuilder.build()
-      
-      // Simulate (Required for Soroban)
+
+      // Simulate (required for Soroban)
       const simulation = await server.simulateTransaction(transaction)
       if (simulation.error) {
-         throw new Error(`Simulation failed: ${simulation.error}`)
+        throw new Error(`Simulation failed: ${simulation.error}`)
       }
 
       // Assemble
       transaction = StellarSdk.SorobanDataBuilder.from(simulation.transactionData).build(transaction)
 
-      // Sign with Wallet Kit
+      // Sign with Wallet Kit (Freighter)
       const kit = getKit()
-      const { signedTxXdr, error: signError } = await kit.signTransaction(
-        transaction.toXDR(),
-        { network: 'TESTNET' }
-      )
+      const { signedTxXdr, error: signError } = await kit.signTransaction(transaction.toXDR(), {
+        network: 'TESTNET',
+      })
 
       if (signError) throw new Error(signError)
       if (!signedTxXdr || typeof signedTxXdr !== 'string') {
@@ -103,9 +99,9 @@ export function useContract() {
       // Submit
       const signedTx = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE)
       const result = await server.sendTransaction(signedTx)
-      
+
       if (result.status === 'ERROR') {
-         throw new Error(`Transaction failed: ${result.hash}`)
+        throw new Error(`Transaction failed: ${result.hash}`)
       }
 
       // Poll for completion
@@ -114,7 +110,7 @@ export function useContract() {
       while (attempts < 20) {
         statusResponse = await server.getTransaction(result.hash)
         if (statusResponse.status !== 'NOT_FOUND') break
-        await new Promise(r => setTimeout(r, 2000))
+        await new Promise((r) => setTimeout(r, 2000))
         attempts++
       }
 
@@ -125,7 +121,6 @@ export function useContract() {
       } else {
         throw new Error('Transaction failed on-chain.')
       }
-
     } catch (err) {
       console.error(err)
       let message = 'Smart Contract Transaction failed.'
@@ -142,5 +137,5 @@ export function useContract() {
     }
   }, [publicKey, getKit])
 
-  return { txStatus, txHash, error, submitExpenseToChain, reset }
+  return { txStatus, txHash, error, recordPaymentOnChain, reset }
 }

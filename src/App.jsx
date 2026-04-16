@@ -4,6 +4,7 @@ import { AlertCircle, Zap } from 'lucide-react'
 import { useWallet } from './hooks/useWallet'
 import { useBalance } from './hooks/useBalance'
 import { useTransaction } from './hooks/useTransaction'
+import { useContract } from './hooks/useContract'
 
 import Header from './components/Header'
 import WalletBar from './components/WalletBar'
@@ -21,6 +22,7 @@ export default function App() {
   const { publicKey, network, isConnected, connecting, isInitializing, error: walletError, connectWallet, disconnectWallet } = useWallet()
   const { displayBalance, loading: balanceLoading, refetch: refetchBalance } = useBalance(publicKey)
   const { status: txStatus, txHash, sendXLM, reset: resetTx } = useTransaction()
+  const { recordPaymentOnChain } = useContract()
 
   const [notifications, setNotifications] = useState([])
   const [connectError, setConnectError] = useState(null)
@@ -62,6 +64,14 @@ export default function App() {
         message: `Sent ${paymentParams.amount} XLM to ${paymentParams.to.slice(0,4)}...`,
       })
       refetchBalance()
+      // Log the payment on-chain via smart contract (fire and forget)
+      recordPaymentOnChain({
+        id: result.hash,
+        from: publicKey,
+        to: paymentParams.to,
+        amount: paymentParams.amount,
+        date: BigInt(Math.floor(Date.now() / 1000)),
+      })
     } else {
       pushNotification({
         status: 'failed',
