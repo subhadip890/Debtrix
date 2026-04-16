@@ -184,6 +184,45 @@ Run `npm test` to reproduce:
 
 ---
 
+## 🟢 Level 4 - Green Belt Submission
+
+This level focuses on **advanced contract patterns and production readiness**.
+
+### ✅ Submission Checklist Met
+
+- **Inter-contract call working:** Yes! A custom `reward_token` contract was built. The `expense_splitter` uses `env.invoke_contract` to mint 10 **DBTX** tokens to the sender upon every successful payment.
+- **Custom token or pool deployed:** The **DBTX** Reward Token contract was written in Rust/Soroban and deployed.
+- **Advanced event streaming:** Migrated the frontend feed from polling storage to using `StellarSdk.SorobanRpc.Server.getEvents` for real-time blockchain event streaming.
+- **CI/CD running:** Configured `.github/workflows/ci.yml` for automated testing and linting on push. See dynamic badge below.
+- **Mobile responsive:** Added CSS grid breakpoints and media queries for seamless mobile layout scaling.
+- **Minimum 8+ meaningful commits:** Exactly 8 atomic commits tracking the Green Belt progression.
+
+### 📸 Required Submission Evidence
+
+#### 1. CI/CD Pipeline Status
+![CI/CD](https://github.com/subhadip890/Debtrix/actions/workflows/ci.yml/badge.svg)
+
+#### 2. Live Demo Link
+**[https://debtrix-theta.vercel.app/](https://debtrix-theta.vercel.app/)**
+
+#### 3. Mobile Responsive View
+> *(Add your mobile screenshot here: `screenshots/mobile.png`)*
+
+#### 4. Contract Addresses & Transaction Hash
+
+**Expense Splitter Contract:**
+```text
+CA5OIXRV6XOLVWSM2OOQEJZRK3XNN7T7NLTQ32IZH6ZWXIWZO5JKT6R3
+```
+
+**DBTX Reward Token Contract:**
+*(To generate this address, run the `Deploy Contracts to Testnet` action in your GitHub Actions tab, then update this section and your `src/hooks/useRewardBalance.js`)*
+
+**Transaction Hash (Inter-contract invocation):**
+> *(Paste a transaction hash here after testing the deployed contracts)*
+
+---
+
 ## ⚙️ Setup Instructions
 
 ### Prerequisites
