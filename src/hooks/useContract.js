@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react'
 import * as StellarSdk from '@stellar/stellar-sdk'
 import { useWallet } from './useWallet'
+import appCache from '../utils/cache'
 
 const HORIZON_URL = 'https://horizon-testnet.stellar.org'
 const NETWORK_PASSPHRASE = StellarSdk.Networks.TESTNET
+const PAYMENTS_TTL_MS = 10_000  // 10 seconds
 
 // ✅ Deployed contract ID on Stellar Testnet
 export const CONTRACT_ID = 'CA5OIXRV6XOLVWSM2OOQEJZRK3XNN7T7NLTQ32IZH6ZWXIWZO5JKT6R3'
@@ -139,6 +141,12 @@ export function useContract() {
 
   // Read direct payment logs from the contract
   const fetchPaymentsFromChain = useCallback(async () => {
+    const CACHE_KEY = 'contract:payments'
+
+    // Return cached data if still fresh
+    const cached = appCache.get(CACHE_KEY)
+    if (cached) return cached
+
     try {
       const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
       // For read-only calls (get_payments), we simulate it with a dummy account
@@ -168,14 +176,15 @@ export function useContract() {
       if (simulation.result?.retval) {
         const records = StellarSdk.scValToNative(simulation.result.retval)
         if (Array.isArray(records)) {
-          // Native map parsing
-          return records.map(p => ({
+          const result = records.map(p => ({
             id: p.id,
             from: p.from,
             to: p.to,
             amount: p.amount,
             date: Number(p.date)
           })).reverse() // Show newest first
+          appCache.set(CACHE_KEY, result, PAYMENTS_TTL_MS)
+          return result
         }
       }
       return []

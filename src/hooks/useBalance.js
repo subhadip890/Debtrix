@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import appCache from '../utils/cache'
 
 const HORIZON_TESTNET = 'https://horizon-testnet.stellar.org'
+const BALANCE_TTL_MS  = 15_000   // 15 seconds
 
 export function useBalance(publicKey) {
   const [balance, setBalance] = useState(null)
@@ -13,6 +15,15 @@ export function useBalance(publicKey) {
       return
     }
 
+    const cacheKey = `balance:${publicKey}`
+
+    // Serve from cache if fresh
+    const cached = appCache.get(cacheKey)
+    if (cached !== undefined) {
+      setBalance(cached)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -20,15 +31,17 @@ export function useBalance(publicKey) {
       const res = await fetch(`${HORIZON_TESTNET}/accounts/${publicKey}`)
       if (!res.ok) {
         if (res.status === 404) {
-          // Account not yet funded on testnet
           setBalance('0.0000000')
+          appCache.set(cacheKey, '0.0000000', BALANCE_TTL_MS)
           return
         }
         throw new Error(`Horizon error: ${res.status}`)
       }
       const data = await res.json()
       const nativeBalance = data.balances?.find((b) => b.asset_type === 'native')
-      setBalance(nativeBalance?.balance ?? '0.0000000')
+      const value = nativeBalance?.balance ?? '0.0000000'
+      setBalance(value)
+      appCache.set(cacheKey, value, BALANCE_TTL_MS)
     } catch (err) {
       setError(err.message)
       setBalance(null)
