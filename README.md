@@ -140,8 +140,47 @@ A successful XLM split payment recording its transaction onto the Soroban smart 
 CA5OIXRV6XOLVWSM2OOQEJZRK3XNN7T7NLTQ32IZH6ZWXIWZO5JKT6R3
 ```
 
-#### 4. Live Demo Link (Optional)
-*(Live Demo URL can be placed here if deployed via Vercel/Netlify)*
+---
+
+## 🟠 Level 3 - Orange Belt Submission
+
+This level focuses on **quality, testing, and documentation** for a complete end-to-end mini-dApp.
+
+### ✅ Submission Checklist Met
+
+- **Mini-dApp fully functional:** Complete split-payment flow with contract read/write, live feed, and error handling.
+- **Minimum 3 tests passing:** **21 unit tests** across 3 test suites, all passing. Run with `npm test`.
+- **Loading states and progress indicators:** Multi-step progress bar during settlements, skeleton loaders in the contract feed.
+- **Basic caching implemented:** TTL-based in-memory cache for XLM balance (15s) and contract reads (10s), avoiding redundant network calls.
+- **README complete:** Full documentation including architecture, belt progressions, and setup guide.
+- **Demo video recorded:** See link below.
+- **Minimum 3+ meaningful commits:** 5 well-scoped commits for this level.
+
+### 📸 Required Submission Evidence
+
+#### Test Output — 21 Tests Passing
+
+Run `npm test` to reproduce:
+
+```text
+ ✓ src/__tests__/cache.test.js       (8 tests)
+ ✓ src/__tests__/splitCalc.test.js   (6 tests)
+ ✓ src/__tests__/validation.test.js  (7 tests)
+
+ Test Files  3 passed (3)
+      Tests  21 passed (21)
+   Duration  ~565ms
+```
+
+![Test Output](screenshots/test.png)
+
+#### Live Demo Link
+
+**[https://debtrix-theta.vercel.app/](https://debtrix-theta.vercel.app/)**
+
+#### Demo Video (1 minute)
+
+> *(Record a 1-minute Loom/YouTube video showing the full payment flow and paste the link here)*
 
 ---
 
@@ -185,48 +224,6 @@ stellar contract deploy \
   --source alice --network testnet
 ```
 *After deploying, copy the resulting `C...` contract identifier and replace the `CONTRACT_ID` inside `src/hooks/useContract.js`.*
-
----
-
-## 🟠 Level 3 - Orange Belt Submission
-
-This level focuses on **quality, testing, and documentation** for a complete end-to-end mini-dApp.
-
-### ✅ Submission Checklist Met
-
-- **Mini-dApp fully functional:** Complete split-payment flow with contract read/write, live feed, and error handling.
-- **Minimum 3 tests passing:** **21 unit tests** across 3 test suites, all passing. Run with `npm test`.
-- **Loading states and progress indicators:** Multi-step progress bar during settlements, skeleton loaders in the contract feed.
-- **Basic caching implemented:** TTL-based in-memory cache for XLM balance (15s) and contract reads (10s), avoiding redundant network calls.
-- **README complete:** Full documentation including architecture, belt progressions, and setup guide.
-- **Demo video recorded:** See link below.
-- **Minimum 3+ meaningful commits:** 5 well-scoped commits for this level.
-
-### 📸 Required Submission Evidence
-
-#### Test Output — 21 Tests Passing
-
-Run `npm test` to reproduce:
-
-```
- ✓ src/__tests__/cache.test.js       (8 tests)
- ✓ src/__tests__/splitCalc.test.js   (6 tests)
- ✓ src/__tests__/validation.test.js  (7 tests)
-
- Test Files  3 passed (3)
-      Tests  21 passed (21)
-   Duration  ~565ms
-```
-
-![Test Output](screenshots/test.png)
-
-#### Live Demo Link
-
-**[https://debtrix-theta.vercel.app/](https://debtrix-theta.vercel.app/)**
-
-#### Demo Video (1 minute)
-
-> *(Record a 1-minute Loom/YouTube video showing the full payment flow and paste the link here)*
 
 ---
 
