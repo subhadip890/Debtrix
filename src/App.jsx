@@ -5,6 +5,7 @@ import { useWallet } from './hooks/useWallet'
 import { useBalance } from './hooks/useBalance'
 import { useTransaction } from './hooks/useTransaction'
 import { useContract } from './hooks/useContract'
+import appCache from './utils/cache'
 
 import Header from './components/Header'
 import WalletBar from './components/WalletBar'
@@ -86,6 +87,9 @@ export default function App() {
 
     setSettlementTotal(0)
     setSettlementStep(0)
+    // Invalidate cached contract data so RecentActivity fetches fresh blockchain state
+    appCache.invalidate('contract:payments')
+    appCache.invalidate(`balance:${publicKey}`)
     pushNotification({
       status: 'success',
       txHash: lastHash,
