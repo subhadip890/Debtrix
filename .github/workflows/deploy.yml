@@ -1,9 +1,7 @@
 name: Build & Deploy Smart Contract
 
 on:
-  push:
-    branches:
-      - '*'
+  workflow_dispatch:
 
 jobs:
   deploy:
