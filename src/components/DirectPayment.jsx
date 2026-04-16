@@ -296,7 +296,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
             )}
             <div>
               <button onClick={resetAll} className="btn-secondary" style={{ width: '100%' }}>
-                <RefreshCw size={14} /> Make Another Payment
+                ← Back
               </button>
             </div>
           </div>
@@ -317,7 +317,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
             </p>
             {txError && <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>{txError}</p>}
             <button onClick={resetAll} className="btn-secondary" style={{ width: '100%' }}>
-              <RefreshCw size={14} /> Try Again
+              ← Back
             </button>
           </div>
         )}
