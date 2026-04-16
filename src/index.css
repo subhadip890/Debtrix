@@ -335,3 +335,33 @@ select.input option {
   overflow-y: auto;
   padding-right: 4px;
 }
+
+/* ─── Mobile Responsiveness ─── */
+.split-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-pill {
+  background: rgba(167,139,250,0.07);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .split-inputs {
+    grid-template-columns: 1fr;
+  }
+  .summary-pill {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

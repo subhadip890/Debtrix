@@ -170,7 +170,7 @@ export default function DirectPayment({
         {!isDone && (
           <form onSubmit={handleSettle}>
             {/* ── Amount + Divided By ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="split-inputs">
               <div>
                 <label className="label" htmlFor="total-amount">Total Amount (XLM)</label>
                 <input
@@ -209,11 +209,7 @@ export default function DirectPayment({
 
             {/* ── Summary pill ── */}
             {validN && total > 0 && (
-              <div style={{
-                background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.2)',
-                borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem',
-                display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.5rem', textAlign: 'center',
-              }}>
+              <div className="summary-pill">
                 <div>
                   <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>Total</p>
                   <p style={{ fontWeight: 700, fontSize: '1rem', color: '#a78bfa' }}>{total.toFixed(4)} XLM</p>
