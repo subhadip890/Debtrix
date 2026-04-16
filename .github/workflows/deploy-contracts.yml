@@ -1,0 +1,83 @@
+name: Deploy Contracts to Testnet
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy_contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust + WASM target
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          source $HOME/.cargo/env
+          rustup target add wasm32-unknown-unknown
+
+      - name: Build Smart Contracts
+        run: |
+          source $HOME/.cargo/env
+          cd contracts/reward_token
+          cargo build --target wasm32-unknown-unknown --release
+          cd ../expense_splitter
+          cargo build --target wasm32-unknown-unknown --release
+
+      - name: Install System Dependencies
+        run: sudo apt-get install -y libdbus-1-dev pkg-config libudev-dev libusb-1.0-0-dev
+
+      - name: Install Stellar CLI
+        run: |
+          source $HOME/.cargo/env
+          cargo install stellar-cli --locked
+
+      - name: Deploy Contracts
+        run: |
+          source $HOME/.cargo/env
+          stellar keys generate alice --network testnet
+          echo "Funded alice!"
+          
+          echo "================================================="
+          echo "Deploying REWARD TOKEN:"
+          stellar contract deploy \
+            --wasm contracts/reward_token/target/wasm32-unknown-unknown/release/reward_token.wasm \
+            --source alice \
+            --network testnet > token_id.txt
+          cat token_id.txt
+          TOKEN_ID=$(cat token_id.txt)
+          
+          echo "================================================="
+          echo "Deploying EXPENSE SPLITTER:"
+          stellar contract deploy \
+            --wasm contracts/expense_splitter/target/wasm32-unknown-unknown/release/debtrix_contract.wasm \
+            --source alice \
+            --network testnet > splitter_id.txt
+          cat splitter_id.txt
+          SPLITTER_ID=$(cat splitter_id.txt)
+          
+          echo "================================================="
+          echo "Initializing Reward Token Admin to Expense Splitter:"
+          stellar contract invoke \
+            --id $TOKEN_ID \
+            --source alice \
+            --network testnet \
+            -- \
+            initialize \
+            --admin $SPLITTER_ID
+            
+          echo "================================================="
+          echo "Linking Reward Token in Expense Splitter:"
+          stellar contract invoke \
+            --id $SPLITTER_ID \
+            --source alice \
+            --network testnet \
+            -- \
+            set_reward_token \
+            --token_addr $TOKEN_ID
+          
+          echo "================================================="
+          echo "✅ DEPLOYMENT COMPLETE!"
+          echo "REWARD_TOKEN_ID=$TOKEN_ID"
+          echo "SPLITTER_ID=$SPLITTER_ID"
