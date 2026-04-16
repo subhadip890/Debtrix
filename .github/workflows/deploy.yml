@@ -36,7 +36,7 @@ jobs:
       - name: Deploy Contract to Testnet
         run: |
           cd contracts/expense_splitter
-          stellar keys generate --global alice --network testnet
+          stellar keys generate alice --network testnet
           echo "================================================="
           echo "CONTRACT ID:"
           echo "================================================="
