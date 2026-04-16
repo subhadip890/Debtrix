@@ -218,7 +218,7 @@ Run `npm test` to reproduce:
    Duration  ~565ms
 ```
 
-> **Screenshot of test output:** *(Add `screenshots/test_output.png` here after running `npm test` and taking a screenshot)*
+![Test Output](screenshots/test.png)
 
 #### Live Demo Link
 
