@@ -1,4 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import * as StellarSdk from '@stellar/stellar-sdk'
+import { CONTRACT_ID } from './useContract'
 
 const STORAGE_KEY = 'debtrix_expenses'
 
@@ -90,19 +92,27 @@ function calculateDebts(expenses) {
 export function useExpenses() {
   const [expenses, setExpenses] = useState(loadExpenses)
 
+  const addExpenseLocally = useCallback((expense) => {
+    setExpenses((prev) => {
+      // Prevent duplicates from event stream
+      if (prev.some(e => e.id === expense.id)) return prev;
+      const updated = [expense, ...prev].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+      saveExpenses(updated)
+      return updated
+    })
+  }, [])
+
   const addExpense = useCallback((expense) => {
     const newExpense = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       ...expense,
     }
-    setExpenses((prev) => {
-      const updated = [newExpense, ...prev]
-      saveExpenses(updated)
-      return updated
-    })
+    // We update UI optimistically, actual on-chain persistence should be 
+    // handled by calling submitExpenseToChain from useContract in the component.
+    addExpenseLocally(newExpense)
     return newExpense
-  }, [])
+  }, [addExpenseLocally])
 
   const removeExpense = useCallback((id) => {
     setExpenses((prev) => {
@@ -111,6 +121,63 @@ export function useExpenses() {
       return updated
     })
   }, [])
+
+  // Real-time Event Synchronization
+  useEffect(() => {
+    if (!CONTRACT_ID || CONTRACT_ID.startsWith('CACAA')) return; // Skip if placeholder
+
+    const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+    let lastLedger = 0;
+
+    const pollEvents = async () => {
+      try {
+        if (lastLedger === 0) {
+           const latest = await server.getLatestLedger()
+           lastLedger = latest.sequence
+        }
+
+        const eventsResponse = await server.getEvents({
+          startLedger: lastLedger,
+          filters: [
+            {
+              type: 'contract',
+              contractIds: [CONTRACT_ID]
+            }
+          ],
+          limit: 100
+        })
+
+        if (eventsResponse.events && eventsResponse.events.length > 0) {
+          for (const ev of eventsResponse.events) {
+             const topics = ev.topic
+             // Check if topic matches ExpenseAdded
+             if (topics[0] && topics[0].value() === 'ExpenseAdded') {
+                const scVal = ev.value
+                // Assuming scVal is a map structured identically to our Expense struct
+                // In a production scenario, we parse ScVal safely
+                const data = StellarSdk.scValToNative(scVal)
+                const newExpense = {
+                   id: data.id,
+                   description: data.description,
+                   amount: data.amount,
+                   paidBy: data.paid_by,
+                   participants: data.participants,
+                   createdAt: new Date(Number(data.date)).toISOString(),
+                   splitType: 'equal',
+                }
+                addExpenseLocally(newExpense)
+             }
+          }
+          lastLedger = eventsResponse.latestLedger
+        }
+      } catch (err) {
+        console.warn('Event sync error:', err)
+      }
+    }
+
+    const interval = setInterval(pollEvents, 10000)
+    return () => clearInterval(interval)
+  }, [addExpenseLocally])
 
   const clearAllExpenses = useCallback(() => {
     setExpenses([])

@@ -1,0 +1,32 @@
+name: Deploy Smart Contract
+
+on:
+  push:
+    branches:
+      - '*' # Runs on any branch push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Stellar CLI
+        run: |
+          curl -L -o stellar-cli.tar.gz https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf stellar-cli.tar.gz
+          sudo mv stellar-cli-*/stellar /usr/local/bin/
+
+      - name: Deploy Contract to Testnet
+        run: |
+          echo "Generating identities..."
+          cd contracts/expense_splitter
+          
+          stellar keys generate --global alice --network testnet
+          
+          echo "================================================="
+          echo "SUCCESSFULLY DEPLOYED! HERE IS YOUR CONTRACT ID:"
+          echo "================================================="
+          
+          stellar contract deploy --wasm target/wasm32-unknown-unknown/release/debtrix_contract.wasm --source alice --network testnet

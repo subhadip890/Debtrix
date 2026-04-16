@@ -1,8 +1,9 @@
+import { useEffect } from 'react'
 import { X, Send, Loader2, CheckCircle2, XCircle, ExternalLink, ArrowRight } from 'lucide-react'
+import { truncateAddress } from '../utils/stellar'
 
 function truncate(addr) {
-  if (!addr) return '—'
-  return `${addr.slice(0, 8)}…${addr.slice(-6)}`
+  return truncateAddress(addr, 8, 6)
 }
 
 export default function SettleModal({ debt, myPublicKey, onConfirm, onClose, txStatus, txHash, txError }) {
@@ -11,8 +12,21 @@ export default function SettleModal({ debt, myPublicKey, onConfirm, onClose, txS
   const isFailed = txStatus === 'failed'
   const done = isSuccess || isFailed
 
+  // Close on Escape (unless tx is in flight)
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape' && !isPending) onClose() }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [isPending, onClose])
+
   return (
-    <div className="modal-overlay" onClick={(e) => !isPending && e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Settle Debt"
+      onClick={(e) => !isPending && e.target === e.currentTarget && onClose()}
+    >
       <div className="modal-box" style={{ maxWidth: '460px' }}>
 
         {/* Header */}

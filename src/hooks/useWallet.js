@@ -1,5 +1,17 @@
 import { useState, useCallback, useEffect } from 'react'
-import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api'
+import { StellarWalletsKit, WalletNetwork, allowAllModules } from '@creit.tech/stellar-wallets-kit'
+
+let kit = null
+function getKit() {
+  if (!kit) {
+    kit = new StellarWalletsKit({
+      network: WalletNetwork.TESTNET,
+      selectedWalletId: 'freighter',
+      modules: allowAllModules(),
+    })
+  }
+  return kit
+}
 
 export function useWallet() {
   const [publicKey, setPublicKey] = useState(null)
@@ -13,28 +25,27 @@ export function useWallet() {
     async function checkSession() {
       try {
         const storedKey = localStorage.getItem('debtrix_wallet')
-        if (!storedKey) {
+        const storedWalletId = localStorage.getItem('debtrix_wallet_id')
+        
+        if (!storedKey || !storedWalletId) {
           setIsInitializing(false)
           return
         }
         
-        const { isConnected: hasFreighter } = await isConnected()
-        if (!hasFreighter) {
-          localStorage.removeItem('debtrix_wallet')
-          setIsInitializing(false)
-          return
-        }
+        const walletKit = getKit()
+        walletKit.setWallet(storedWalletId)
         
-        // If stored key exists, verify we can still get the public key quietly
-        const { address, error } = await getAddress()
+        const { address, error } = await walletKit.getAddress()
         if (address && !error) {
           setPublicKey(address)
         } else {
           localStorage.removeItem('debtrix_wallet')
+          localStorage.removeItem('debtrix_wallet_id')
         }
       } catch (e) {
         console.error("Wallet auto-connect failed:", e)
         localStorage.removeItem('debtrix_wallet')
+        localStorage.removeItem('debtrix_wallet_id')
       } finally {
         setIsInitializing(false)
       }
@@ -46,33 +57,28 @@ export function useWallet() {
     setError(null)
     setConnecting(true)
     try {
-      const { isConnected: hasFreighter } = await isConnected()
-      if (!hasFreighter) {
-        throw new Error('Freighter wallet is not installed. Please add the extension.')
-      }
-
-      // requestAccess triggers the Freighter popup and returns the public key
-      const { address, error } = await requestAccess()
+      const walletKit = getKit()
       
-      if (error) {
-        throw new Error(error)
-      }
-      
-      if (!address) {
-        throw new Error('Connection request was declined or wallet is locked.')
-      }
-
-      setPublicKey(address)
-      setNetwork('TESTNET') // Hardcoded for Level 1 scope
-      localStorage.setItem('debtrix_wallet', address)
+      // Request connection via the kit (will open kit's modal if configured, or default wallet)
+      await walletKit.openModal({
+        onWalletSelected: async (option) => {
+          walletKit.setWallet(option.id)
+          const { address, error } = await walletKit.getAddress()
+          if (error) throw new Error(error)
+          if (!address) throw new Error('Connection request was declined or wallet is locked.')
+          
+          setPublicKey(address)
+          setNetwork('TESTNET')
+          localStorage.setItem('debtrix_wallet', address)
+          localStorage.setItem('debtrix_wallet_id', option.id)
+        }
+      })
       
     } catch (err) {
       console.error('Wallet connection error:', err)
-      let msg = 'Failed to connect to Freighter.'
+      let msg = 'Failed to connect to wallet.'
       if (err.message && err.message.length < 100) {
         msg = err.message
-      } else if (typeof err === 'string' && err.length < 100) {
-        msg = err
       }
       setError(msg)
       throw new Error(msg)
@@ -86,6 +92,7 @@ export function useWallet() {
     setNetwork('TESTNET')
     setError(null)
     localStorage.removeItem('debtrix_wallet')
+    localStorage.removeItem('debtrix_wallet_id')
   }, [])
 
   return {
@@ -97,5 +104,7 @@ export function useWallet() {
     error,
     connectWallet,
     disconnectWallet,
+    getKit,
   }
 }
+

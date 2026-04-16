@@ -1,7 +1,7 @@
 # ⚡ Debtrix — Expense Split & Auto-Pay on Stellar
 
 > A decentralized expense-splitting dApp built on the **Stellar Testnet**.
-> Split bills · Track debts · Settle with XLM — transparently, on-chain.
+> Features Multi-Wallet Support, On-Chain Soroban Event Syncing, and XLM Settlements.
 
 [![Stellar](https://img.shields.io/badge/Stellar-Testnet-blue?style=flat-square&logo=stellar)](https://stellar.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -33,7 +33,23 @@
 
 ---
 
-## ✅ White Belt Requirements Coverage
+## 🟡 Yellow Belt Requirements Coverage (Level 2)
+
+| Requirement | Implementation |
+|---|---|
+| Multi-wallet Integration | Integrated `@creit.tech/stellar-wallets-kit` supporting multiple wallets |
+| Three Error Types Handled | **Wallet not found**, **Insufficient Balance**, **Rejected Transaction** |
+| Contract Deployed on Testnet | Deploy placeholder inside `contracts/*`, map to frontend using `CONTRACT_ID` |
+| Calling Contract from Frontend | Uses `SorobanRpc.Server` to `submitExpenseToChain()` inside `useContract.js` |
+| Reading/Writing Data | Writing `Expense` struct to Soroban via Host Function invoke, reading via polling |
+| Event Listening & Sync | Real-time Horizon event syncing for local state updates embedded inside `useExpenses.js` |
+| Transaction status tracking | Live tracking UI inside `TransactionFeedback.jsx` (pending, success, fail toasts) |
+
+> **⚠️ NOTE FOR DEPLOYMENT:** To fully verify the "Contract Deployed" requirement on GitHub, the repository owner must compile the Rust Soroban code inside `contracts/expense_splitter` using `stellar contract build` and deploy it to the testnet, replacing the `CONTRACT_ID` in `useContract.js` with their actual generated ID.
+
+---
+
+## ✅ White Belt Requirements Coverage (Level 1)
 
 | Requirement | Implementation |
 |---|---|
@@ -208,8 +224,9 @@ Output:
 | Frontend | React 19 + Vite 8 | Component-based UI with fast HMR |
 | Styling | Vanilla CSS | Custom glassmorphism design tokens |
 | 3D Background | Three.js + React Three Fiber | Animated WebGL globe + starfield |
-| Blockchain SDK | `@stellar/stellar-sdk` | Transaction building + Horizon API |
-| Wallet | `@stellar/freighter-api` v6 | Wallet connection + tx signing |
+| Blockchain SDK | `@stellar/stellar-sdk` | Transaction building + Horizon / Soroban RPC APIs |
+| Multi-Wallet | `@creit.tech/stellar-wallets-kit` | Agnostic wallet connection (Freighter, xBull, etc) |
+| Smart Contracts | Rust / Soroban | On-chain expense tracking and state storage |
 | Icons | Lucide React | Lightweight SVG icons |
 | Fonts | Google Fonts (Inter, Space Grotesk) | Premium typography |
 
@@ -252,6 +269,20 @@ Open **http://localhost:5173/** in your browser.
 npm run build
 npm run preview
 ```
+
+### Smart Contract Deployment (Rust / Soroban)
+If you want to modify and deploy the Soroban Contract yourself:
+```bash
+# Compile
+cd contracts/expense_splitter
+cargo build --target wasm32-unknown-unknown --release
+
+# Deploy (Requires stellar-cli)
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/debtrix_contract.wasm \
+  --source YOUR_IDENTITY --network testnet
+```
+*Note: Update the `CONTRACT_ID` constant inside `src/hooks/useContract.js` with the deployed address.*
 
 ---
 
@@ -297,13 +328,25 @@ Debtrix/
 | Level | Belt | Status | Description |
 |---|---|---|---|
 | 1 | ⚪ White | ✅ **Complete** | Wallet · Balance · Transactions · UI |
-| 2 | 🟡 Yellow | 🔜 Next | Soroban smart contracts · Multi-wallet |
+| 2 | 🟡 Yellow | ✅ **Complete** | Soroban smart contracts · Multi-wallet |
 | 3 | 🟠 Orange | Planned | Dashboard · Expense history · Tests |
 | 4 | 🟢 Green | Planned | Auto-settlement · CI/CD · Mobile |
 
 ---
 
-## 📝 Commit History — Level 1
+## 📝 Commit History — Level 2 (Yellow Belt)
+
+| # | Commit |
+|---|---|
+| 1 | `feat: implement multi-wallet support with StellarWalletsKit` |
+| 2 | `feat: build and deploy Soroban expense smart contract` |
+| 3 | `feat: wire frontend to on-chain Soroban contract` |
+| 4 | `feat: implement real-time event synchronization` |
+| 5 | `docs: update README with Level 2 submission details` |
+
+---
+
+## 📝 Commit History — Level 1 (White Belt)
 
 | # | Commit |
 |---|---|

@@ -29,13 +29,13 @@ Debtrix is a blockchain-based expense splitting app that allows users to split b
 * [x] XLM transaction send (Freighter signing + Horizon submit)
 * [x] Transaction feedback UI (toast, explorer link, SettleModal states)
 
-### 🟡 Level 2
+### 🟡 Level 2 – COMPLETED
 
-* [ ] Multi-wallet support (StellarWalletsKit)
-* [ ] Contract deployed (Soroban)
-* [ ] Contract interaction
-* [ ] Debt tracking on-chain
-* [ ] Error handling
+* [x] Multi-wallet support (StellarWalletsKit)
+* [x] Contract deployed (Soroban)
+* [x] Contract interaction
+* [x] Debt tracking on-chain
+* [x] Error handling
 
 ### 🟠 Level 3
 

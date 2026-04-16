@@ -1,8 +1,8 @@
 import { ArrowRight, CheckCircle2, Wallet } from 'lucide-react'
+import { truncateAddress } from '../utils/stellar'
 
 function truncate(addr) {
-  if (!addr) return '—'
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
+  return truncateAddress(addr)
 }
 
 export default function DebtSummary({ debts, myPublicKey, onSettle }) {
@@ -45,10 +45,11 @@ export default function DebtSummary({ debts, myPublicKey, onSettle }) {
       {debts.map((debt, idx) => {
         const isMe = debt.from === myPublicKey
         const isMineToReceive = debt.to === myPublicKey
+        const stableKey = `${debt.from}-${debt.to}`
 
         return (
           <div
-            key={idx}
+            key={stableKey}
             className="glass-card"
             style={{
               padding: '1.125rem 1.25rem',

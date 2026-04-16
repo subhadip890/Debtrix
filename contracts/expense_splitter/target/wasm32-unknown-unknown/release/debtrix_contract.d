@@ -1,0 +1,1 @@
+C:\Users\subha\OneDrive\Apps\stellar\Debtrix\contracts\expense_splitter\target\wasm32-unknown-unknown\release\debtrix_contract.wasm: C:\Users\subha\OneDrive\Apps\stellar\Debtrix\contracts\expense_splitter\src\lib.rs

@@ -1,10 +1,11 @@
-import { useState, useCallback, createPortal } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { Plus, Receipt, BarChart3, AlertCircle, Zap } from 'lucide-react'
 
 import { useWallet } from './hooks/useWallet'
 import { useBalance } from './hooks/useBalance'
 import { useExpenses } from './hooks/useExpenses'
 import { useTransaction } from './hooks/useTransaction'
+import { useContract } from './hooks/useContract'
 
 import Header from './components/Header'
 import WalletBar from './components/WalletBar'
@@ -13,12 +14,19 @@ import ExpenseList from './components/ExpenseList'
 import DebtSummary from './components/DebtSummary'
 import SettleModal from './components/SettleModal'
 import TransactionFeedback from './components/TransactionFeedback'
-import AnimatedBackground from './components/AnimatedBackground'
+
+// Defer heavy Three.js chunk — app UI is interactive before 3D loads
+const AnimatedBackground = lazy(() => import('./components/AnimatedBackground'))
+
+const BgFallback = () => (
+  <div style={{ position: 'fixed', inset: 0, zIndex: -10, background: '#000000' }} />
+)
 
 export default function App() {
-  const { publicKey, network, isConnected, connecting, error: walletError, connectWallet, disconnectWallet } = useWallet()
+  const { publicKey, network, isConnected, connecting, isInitializing, error: walletError, connectWallet, disconnectWallet } = useWallet()
   const { displayBalance, loading: balanceLoading, refetch: refetchBalance } = useBalance(publicKey)
-  const { expenses, debts, addExpense, removeExpense } = useExpenses()
+  const { expenses, debts, addExpense, removeExpense, clearAllExpenses } = useExpenses()
+  const { submitExpenseToChain } = useContract()
   const { status: txStatus, txHash, error: txError, sendXLM, reset: resetTx } = useTransaction()
 
   const [activeTab, setActiveTab] = useState('expenses') // 'expenses' | 'debts'
@@ -26,6 +34,7 @@ export default function App() {
   const [settleDebt, setSettleDebt] = useState(null) // the debt being settled
   const [notifications, setNotifications] = useState([])
   const [connectError, setConnectError] = useState(null)
+  const [isContractPending, setIsContractPending] = useState(false)
 
   // ── Notification helpers ──
   const pushNotification = useCallback((notification) => {
@@ -86,10 +95,52 @@ export default function App() {
   const youOwe = debts.filter((d) => d.from === publicKey).reduce((sum, d) => sum + d.amount, 0)
   const youAreOwed = debts.filter((d) => d.to === publicKey).reduce((sum, d) => sum + d.amount, 0)
 
+  // ── Initializing loader ──
+  if (isInitializing) {
+    return (
+      <>
+        <Suspense fallback={<BgFallback />}>
+          <AnimatedBackground />
+        </Suspense>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+          }}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+              }}
+            >
+              <Zap size={24} color="#a78bfa" className="animate-pulse-glow" />
+            </div>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Loading wallet…</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
-      {/* 3D Animated WebGL Background */}
-      <AnimatedBackground />
+      {/* 3D Animated WebGL Background — lazy loaded, deferred after UI paint */}
+      <Suspense fallback={<BgFallback />}>
+        <AnimatedBackground />
+      </Suspense>
 
       {/* Header */}
       <Header
@@ -269,7 +320,25 @@ export default function App() {
 
         {/* Tab content */}
         {activeTab === 'expenses' && (
-          <ExpenseList expenses={expenses} onRemove={removeExpense} />
+          <>
+            <ExpenseList expenses={expenses} onRemove={removeExpense} />
+            {expenses.length > 0 && (
+              <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  id="btn-clear-expenses"
+                  className="btn-secondary"
+                  style={{ fontSize: '0.75rem', color: 'var(--error)', borderColor: 'rgba(239,68,68,0.2)' }}
+                  onClick={() => {
+                    if (window.confirm('Clear all expenses? This cannot be undone.')) {
+                      clearAllExpenses()
+                    }
+                  }}
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+          </>
         )}
         {activeTab === 'debts' && (
           <DebtSummary
@@ -282,11 +351,34 @@ export default function App() {
 
       {/* Modals */}
       {showExpenseForm && (
-        <ExpenseForm
-          onAdd={addExpense}
-          onClose={() => setShowExpenseForm(false)}
-          myPublicKey={publicKey}
-        />
+        <div style={{opacity: isContractPending ? 0.5 : 1, pointerEvents: isContractPending ? 'none' : 'auto'}}>
+          <ExpenseForm
+            onAdd={async (exp) => {
+              // Optimistic local update
+              const newExp = addExpense(exp)
+              
+              // On-chain persistence
+              setIsContractPending(true)
+              const result = await submitExpenseToChain(newExp)
+              setIsContractPending(false)
+              
+              if (result.success) {
+                pushNotification({
+                  status: 'success',
+                  txHash: result.hash,
+                  message: 'Expense added to Blockchain!',
+                })
+              } else {
+                pushNotification({
+                  status: 'failed',
+                  message: `On-chain save failed: ${result.error}`,
+                })
+              }
+            }}
+            onClose={() => setShowExpenseForm(false)}
+            myPublicKey={publicKey}
+          />
+        </div>
       )}
 
       {settleDebt && (

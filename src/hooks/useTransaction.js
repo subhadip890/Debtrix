@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import * as StellarSdk from '@stellar/stellar-sdk'
+import { useWallet } from './useWallet'
 
 const HORIZON_URL = 'https://horizon-testnet.stellar.org'
 const NETWORK_PASSPHRASE = StellarSdk.Networks.TESTNET
@@ -8,6 +9,7 @@ export function useTransaction() {
   const [status, setStatus] = useState(null) // null | 'pending' | 'success' | 'failed'
   const [txHash, setTxHash] = useState(null)
   const [error, setError] = useState(null)
+  const { getKit } = useWallet()
 
   const reset = useCallback(() => {
     setStatus(null)
@@ -64,20 +66,25 @@ export function useTransaction() {
 
       const transaction = txBuilder.build()
 
-      // 5. Sign with Freighter
-      const { isConnected, signTransaction } = await import('@stellar/freighter-api');
-      if (!(await isConnected())) {
-        throw new Error('Freighter wallet not found or disconnected.')
-      }
-
-      const signedXdr = await signTransaction(
+      // 5. Sign with WalletKit
+      const kit = getKit()
+      const { signedTxXdr, error: signError } = await kit.signTransaction(
         transaction.toXDR(),
         { network: 'TESTNET' }
       )
 
+      if (signError) {
+        throw new Error(signError)
+      }
+
+      const rawXdr = signedTxXdr
+      if (!rawXdr || typeof rawXdr !== 'string') {
+        throw new Error('You rejected the transaction in the wallet.')
+      }
+
       // 6. Submit
       const signedTx = StellarSdk.TransactionBuilder.fromXDR(
-        signedXdr,
+        rawXdr,
         NETWORK_PASSPHRASE
       )
       const result = await server.submitTransaction(signedTx)

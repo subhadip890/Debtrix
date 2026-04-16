@@ -38,6 +38,13 @@ export default function ExpenseForm({ onAdd, onClose, myPublicKey }) {
     }
   }, [myPublicKey])
 
+  // Close on Escape
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
   const validate = () => {
     const e = {}
     if (!form.description.trim()) e.description = 'Description is required.'
@@ -127,7 +134,13 @@ export default function ExpenseForm({ onAdd, onClose, myPublicKey }) {
     validParticipants.length > 0 ? (totalAmount / validParticipants.length).toFixed(4) : '0'
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Add Expense"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="modal-box">
         {/* Header */}
         <div
