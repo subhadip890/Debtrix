@@ -3,18 +3,17 @@ use soroban_sdk::{contract, contractimpl, contracttype, Env, String, Vec, Symbol
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Expense {
+pub struct PaymentLog {
     pub id: String,
-    pub description: String,
+    pub from: String,
+    pub to: String,
     pub amount: String,
-    pub paid_by: String,
-    pub participants: Vec<String>,
     pub date: u64,
 }
 
 #[contracttype]
 pub enum DataKey {
-    Expenses,
+    Payments,
 }
 
 #[contract]
@@ -22,24 +21,24 @@ pub struct DebtrixContract;
 
 #[contractimpl]
 impl DebtrixContract {
-    pub fn add_expense(env: Env, expense: Expense) {
-        // Read existing
-        let mut expenses: Vec<Expense> = env.storage().instance().get(&DataKey::Expenses).unwrap_or(vec![&env]);
+    pub fn record_payment(env: Env, payment: PaymentLog) {
+        // Read existing payments
+        let mut payments: Vec<PaymentLog> = env.storage().instance().get(&DataKey::Payments).unwrap_or(vec![&env]);
         
-        // Push new
-        expenses.push_back(expense.clone());
+        // Push new record
+        payments.push_back(payment.clone());
         
         // Save
-        env.storage().instance().set(&DataKey::Expenses, &expenses);
+        env.storage().instance().set(&DataKey::Payments, &payments);
         
         // Emit an event for real-time tracking
         env.events().publish(
-            (Symbol::new(&env, "ExpenseAdded"),),
-            expense
+            (Symbol::new(&env, "PaymentSent"),),
+            payment
         );
     }
 
-    pub fn get_expenses(env: Env) -> Vec<Expense> {
-        env.storage().instance().get(&DataKey::Expenses).unwrap_or(vec![&env])
+    pub fn get_payments(env: Env) -> Vec<PaymentLog> {
+        env.storage().instance().get(&DataKey::Payments).unwrap_or(vec![&env])
     }
 }

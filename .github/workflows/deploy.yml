@@ -1,9 +1,9 @@
-name: Deploy Smart Contract
+name: Build & Deploy Smart Contract
 
 on:
   push:
     branches:
-      - '*' # Runs on any branch push
+      - '*'
 
 jobs:
   deploy:
@@ -12,17 +12,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Deploy Contract via Official Stellar Docker
+      - name: Install Rust + WASM target
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          source $HOME/.cargo/env
+          rustup target add wasm32-unknown-unknown
+
+      - name: Build Smart Contract
+        run: |
+          source $HOME/.cargo/env
+          cd contracts/expense_splitter
+          cargo build --target wasm32-unknown-unknown --release
+
+      - name: Install Stellar CLI
+        run: |
+          curl -L https://github.com/stellar/stellar-cli/releases/download/v22.0.0/stellar-cli-x86_64-unknown-linux-gnu.tar.gz -o stellar.tar.gz
+          tar -xzf stellar.tar.gz
+          sudo mv stellar /usr/local/bin/stellar
+          stellar --version
+
+      - name: Deploy Contract to Testnet
         run: |
           cd contracts/expense_splitter
-          
-          echo "Pulling official Stellar CLI environment... (10 seconds)"
-          
-          # We use the official Docker image to bypass all installations and ensure it always works instantly.
-          # Everything is run inside a single container session so the generated keys persist.
-          docker run --rm -v $PWD:/workspace -w /workspace stellar/stellar-cli:latest bash -c "\
-            stellar keys generate --global alice --network testnet && \
-            echo '=================================================' && \
-            echo 'SUCCESSFULLY DEPLOYED! HERE IS YOUR CONTRACT ID:' && \
-            echo '=================================================' && \
-            stellar contract deploy --wasm target/wasm32-unknown-unknown/release/debtrix_contract.wasm --source alice --network testnet"
+          stellar keys generate --global alice --network testnet
+          echo "================================================="
+          echo "CONTRACT ID:"
+          echo "================================================="
+          stellar contract deploy \
+            --wasm target/wasm32-unknown-unknown/release/debtrix_contract.wasm \
+            --source alice \
+            --network testnet
