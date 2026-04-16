@@ -12,20 +12,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Stellar CLI
-        uses: stellar/actions/setup-stellar-cli@main
-        with:
-          version: latest
-
-      - name: Deploy Contract to Testnet
+      - name: Deploy Contract via Official Stellar Docker
         run: |
-          echo "Generating identities..."
           cd contracts/expense_splitter
           
-          stellar keys generate --global alice --network testnet
+          echo "Pulling official Stellar CLI environment... (10 seconds)"
           
-          echo "================================================="
-          echo "SUCCESSFULLY DEPLOYED! HERE IS YOUR CONTRACT ID:"
-          echo "================================================="
-          
-          stellar contract deploy --wasm target/wasm32-unknown-unknown/release/debtrix_contract.wasm --source alice --network testnet
+          # We use the official Docker image to bypass all installations and ensure it always works instantly.
+          # Everything is run inside a single container session so the generated keys persist.
+          docker run --rm -v $PWD:/workspace -w /workspace stellar/stellar-cli:latest bash -c "\
+            stellar keys generate --global alice --network testnet && \
+            echo '=================================================' && \
+            echo 'SUCCESSFULLY DEPLOYED! HERE IS YOUR CONTRACT ID:' && \
+            echo '=================================================' && \
+            stellar contract deploy --wasm target/wasm32-unknown-unknown/release/debtrix_contract.wasm --source alice --network testnet"
