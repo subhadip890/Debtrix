@@ -188,5 +188,47 @@ stellar contract deploy \
 
 ---
 
+## 🟠 Level 3 - Orange Belt Submission
+
+This level focuses on **quality, testing, and documentation** for a complete end-to-end mini-dApp.
+
+### ✅ Submission Checklist Met
+
+- **Mini-dApp fully functional:** Complete split-payment flow with contract read/write, live feed, and error handling.
+- **Minimum 3 tests passing:** **21 unit tests** across 3 test suites, all passing. Run with `npm test`.
+- **Loading states and progress indicators:** Multi-step progress bar during settlements, skeleton loaders in the contract feed.
+- **Basic caching implemented:** TTL-based in-memory cache for XLM balance (15s) and contract reads (10s), avoiding redundant network calls.
+- **README complete:** Full documentation including architecture, belt progressions, and setup guide.
+- **Demo video recorded:** See link below.
+- **Minimum 3+ meaningful commits:** 5 well-scoped commits for this level.
+
+### 📸 Required Submission Evidence
+
+#### Test Output — 21 Tests Passing
+
+Run `npm test` to reproduce:
+
+```
+ ✓ src/__tests__/cache.test.js       (8 tests)
+ ✓ src/__tests__/splitCalc.test.js   (6 tests)
+ ✓ src/__tests__/validation.test.js  (7 tests)
+
+ Test Files  3 passed (3)
+      Tests  21 passed (21)
+   Duration  ~565ms
+```
+
+> **Screenshot of test output:** *(Add `screenshots/test_output.png` here after running `npm test` and taking a screenshot)*
+
+#### Live Demo Link
+
+> *(Deploy to Vercel or Netlify and paste the live URL here)*
+
+#### Demo Video (1 minute)
+
+> *(Record a 1-minute Loom/YouTube video showing the full payment flow and paste the link here)*
+
+---
+
 ## 📄 License
 MIT © [subhadip890](https://github.com/subhadip890)
