@@ -27,6 +27,8 @@ export default function App() {
 
   const [notifications, setNotifications] = useState([])
   const [connectError, setConnectError] = useState(null)
+  const [settlementStep, setSettlementStep] = useState(0)
+  const [settlementTotal, setSettlementTotal] = useState(0)
 
   // ── Notification helpers ──
   const pushNotification = useCallback((notification) => {
@@ -51,9 +53,13 @@ export default function App() {
   // ── Settle flow — sends XLM to each receiver sequentially ──
   const handleConfirmSettle = async ({ receivers, totalAmount }) => {
     resetTx()
+    setSettlementStep(0)
+    setSettlementTotal(receivers.length)
     let lastHash = null
 
-    for (const { to, amount } of receivers) {
+    for (let i = 0; i < receivers.length; i++) {
+      const { to, amount } = receivers[i]
+      setSettlementStep(i + 1)
       const result = await sendXLM({
         from: publicKey,
         to,
@@ -63,11 +69,12 @@ export default function App() {
 
       if (!result.success) {
         pushNotification({ status: 'failed', message: result.error })
+        setSettlementTotal(0)
         return
       }
       lastHash = result.hash
 
-      // Log each payment on-chain
+      // Log each payment on-chain (fire & forget)
       recordPaymentOnChain({
         id: result.hash,
         from: publicKey,
@@ -77,6 +84,8 @@ export default function App() {
       })
     }
 
+    setSettlementTotal(0)
+    setSettlementStep(0)
     pushNotification({
       status: 'success',
       txHash: lastHash,
@@ -181,6 +190,8 @@ export default function App() {
               txHash={txHash}
               txError={txError}
               onBack={resetTx}
+              settlementStep={settlementStep}
+              settlementTotal={settlementTotal}
             />
             <RecentActivity txStatus={txStatus} />
           </div>

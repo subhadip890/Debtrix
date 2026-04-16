@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import {
   Send, Loader2, CheckCircle2, XCircle, ExternalLink,
-  Users, Hash, Trash2, RefreshCw
+  Users, Hash, RefreshCw, CheckCheck
 } from 'lucide-react'
 import * as StellarSdk from '@stellar/stellar-sdk'
 
-function isValidStellarAddress(addr) {
+// ── Exported for unit tests ──────────────────────────────
+export function isValidStellarAddress(addr) {
   try {
     return StellarSdk.StrKey.isValidEd25519PublicKey(addr)
   } catch {
@@ -13,24 +14,73 @@ function isValidStellarAddress(addr) {
   }
 }
 
-export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, txError, onBack }) {
-  const [totalAmount, setTotalAmount]   = useState('')
-  const [divideBy, setDivideBy]         = useState('')        // N
-  const [receivers, setReceivers]       = useState([])         // N-1 addresses
-  const [error, setError]               = useState('')
+export function calcShare(total, n) {
+  if (!n || n < 2 || isNaN(total) || total <= 0) return 0
+  return total / n
+}
+// ────────────────────────────────────────────────────────
+
+/** Multi-step progress bar shown while paying N receivers */
+function SettlementProgress({ current, total }) {
+  if (!total || total < 1) return null
+  const pct = Math.round((current / total) * 100)
+  return (
+    <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          Sending payment {current} of {total}…
+        </span>
+        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#a78bfa' }}>{pct}%</span>
+      </div>
+      <div style={{
+        height: '6px', background: 'rgba(255,255,255,0.06)',
+        borderRadius: '99px', overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%', width: `${pct}%`,
+          background: 'linear-gradient(90deg, #7c3aed, #a78bfa)',
+          borderRadius: '99px',
+          transition: 'width 0.4s ease',
+        }} />
+      </div>
+      {/* step dots */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+        {Array.from({ length: total }, (_, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: '0.3rem',
+            fontSize: '0.7rem', color: i < current ? '#34d399' : i === current - 1 ? '#a78bfa' : 'var(--text-muted)',
+          }}>
+            {i < current
+              ? <CheckCheck size={12} color="#34d399" />
+              : <Loader2 size={12} className={i === current - 1 ? 'animate-spin' : ''} />}
+            Receiver {i + 1}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function DirectPayment({
+  publicKey, onSettle, txStatus, txHash, txError, onBack,
+  settlementStep = 0, settlementTotal = 0,
+}) {
+  const [totalAmount, setTotalAmount] = useState('')
+  const [divideBy, setDivideBy]       = useState('')
+  const [receivers, setReceivers]     = useState([])
+  const [error, setError]             = useState('')
 
   const isPending = txStatus === 'pending'
   const isSuccess = txStatus === 'success'
   const isFailed  = txStatus === 'failed'
   const isDone    = isSuccess || isFailed
 
-  const total   = parseFloat(totalAmount) || 0
-  const n       = parseInt(divideBy, 10)
-  const validN  = !isNaN(n) && n >= 2           // must be at least 2 (you + 1 receiver)
-  const share   = validN ? total / n : 0         // each person's share
-  const numReceivers = validN ? n - 1 : 0        // you pay the N-1 others
+  const total        = parseFloat(totalAmount) || 0
+  const n            = parseInt(divideBy, 10)
+  const validN       = !isNaN(n) && n >= 2
+  const share        = calcShare(total, n)
+  const numReceivers = validN ? n - 1 : 0
 
-  // Auto-resize receivers array when N changes
   useEffect(() => {
     if (!validN) { setReceivers([]); return }
     setReceivers((prev) => {
@@ -49,7 +99,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
     setDivideBy('')
     setReceivers([])
     setError('')
-    if (onBack) onBack()  // also reset txStatus in parent
+    if (onBack) onBack()
   }
 
   const handleSettle = (e) => {
@@ -64,26 +114,21 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
       setError('Please enter "Divided By" as a number ≥ 2.')
       return
     }
-    const filledReceivers = receivers.filter((r) => r.trim())
-    if (filledReceivers.length < numReceivers) {
+    const filled = receivers.filter((r) => r.trim())
+    if (filled.length < numReceivers) {
       setError(`Please fill in all ${numReceivers} receiver address${numReceivers > 1 ? 'es' : ''}.`)
       return
     }
-    const invalidAddr = filledReceivers.find((r) => !isValidStellarAddress(r))
-    if (invalidAddr) {
-      setError(`Invalid Stellar address: ${invalidAddr.slice(0, 10)}...`)
+    const invalid = filled.find((r) => !isValidStellarAddress(r))
+    if (invalid) {
+      setError(`Invalid Stellar address: ${invalid.slice(0, 10)}...`)
       return
     }
-    const selfAddr = filledReceivers.find((r) => r.trim() === publicKey)
-    if (selfAddr) {
-      setError('One of the receivers is your own address. Please use a different address.')
+    if (filled.find((r) => r.trim() === publicKey)) {
+      setError('One of the receivers is your own address.')
       return
     }
-
-    onSettle({
-      receivers: filledReceivers.map((addr) => ({ to: addr, amount: share })),
-      totalAmount: total,
-    })
+    onSettle({ receivers: filled.map((addr) => ({ to: addr, amount: share })), totalAmount: total })
   }
 
   return (
@@ -95,8 +140,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
           <div style={{
             width: '64px', height: '64px', borderRadius: '20px',
             background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem',
           }}>
             <Users size={32} color="#a78bfa" />
           </div>
@@ -108,12 +152,25 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
           </p>
         </div>
 
+        {/* ── Settlement Progress (shown when pending) ── */}
+        {isPending && settlementTotal > 0 && (
+          <SettlementProgress current={settlementStep} total={settlementTotal} />
+        )}
+
+        {/* ── Loading spinner for single-payment pending ── */}
+        {isPending && settlementTotal === 0 && (
+          <div style={{ textAlign: 'center', padding: '1rem 0', marginBottom: '1rem' }}>
+            <Loader2 size={24} className="animate-spin" style={{ color: '#a78bfa', margin: '0 auto' }} />
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+              Confirm in your wallet…
+            </p>
+          </div>
+        )}
+
         {!isDone && (
           <form onSubmit={handleSettle}>
-
-            {/* ── Row: Amount + Divided By ── */}
+            {/* ── Amount + Divided By ── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              {/* Total Amount */}
               <div>
                 <label className="label" htmlFor="total-amount">Total Amount (XLM)</label>
                 <input
@@ -130,19 +187,10 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
                 />
               </div>
 
-              {/* Divided By N */}
               <div>
-                <label className="label" htmlFor="divide-by">
-                  Divided By (N people)
-                </label>
+                <label className="label" htmlFor="divide-by">Divided By (N people)</label>
                 <div style={{ position: 'relative' }}>
-                  <Hash
-                    size={15}
-                    style={{
-                      position: 'absolute', left: '0.875rem', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none',
-                    }}
-                  />
+                  <Hash size={15} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                   <input
                     id="divide-by"
                     className="input"
@@ -162,8 +210,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
             {/* ── Summary pill ── */}
             {validN && total > 0 && (
               <div style={{
-                background: 'rgba(167,139,250,0.07)',
-                border: '1px solid rgba(167,139,250,0.2)',
+                background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.2)',
                 borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem',
                 display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.5rem', textAlign: 'center',
               }}>
@@ -182,7 +229,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
               </div>
             )}
 
-            {/* ── Receiver addresses (N-1 auto generated) ── */}
+            {/* ── Receivers ── */}
             {validN && numReceivers > 0 && (
               <div style={{ marginBottom: '1.5rem' }}>
                 <label className="label">
@@ -202,7 +249,6 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
                           style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
                         />
                       </div>
-                      {/* Per-receiver share badge */}
                       {total > 0 && (
                         <span style={{
                           fontSize: '0.75rem', fontWeight: 600, color: '#34d399',
@@ -228,7 +274,6 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
               </div>
             )}
 
-            {/* Error */}
             {error && (
               <div style={{
                 padding: '0.75rem', background: 'rgba(239,68,68,0.1)',
@@ -239,7 +284,6 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
               </div>
             )}
 
-            {/* ── Buttons ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <button
                 type="submit"
@@ -248,20 +292,14 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
                 disabled={isPending || !publicKey || !validN}
                 style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
               >
-                {isPending ? (
-                  <><Loader2 size={18} className="animate-spin" /> Sending payments...</>
-                ) : (
-                  <><Send size={18} /> Settle Payment{validN ? ` (${numReceivers} receiver${numReceivers > 1 ? 's' : ''} × ${share.toFixed(4)} XLM)` : ''}</>
-                )}
+                {isPending
+                  ? <><Loader2 size={18} className="animate-spin" /> Sending…</>
+                  : <><Send size={18} /> Settle Payment{validN ? ` (${numReceivers} × ${share.toFixed(4)} XLM)` : ''}</>
+                }
               </button>
 
               {(totalAmount || divideBy) && !isPending && (
-                <button
-                  type="button"
-                  onClick={resetAll}
-                  className="btn-secondary"
-                  style={{ width: '100%', fontSize: '0.875rem' }}
-                >
+                <button type="button" onClick={resetAll} className="btn-secondary" style={{ width: '100%', fontSize: '0.875rem' }}>
                   <RefreshCw size={14} /> Reset
                 </button>
               )}
@@ -272,33 +310,21 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
         {/* ── Success ── */}
         {isSuccess && (
           <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-            <div style={{
-              width: '72px', height: '72px', borderRadius: '50%',
-              background: 'rgba(16,185,129,0.1)', border: '2px solid var(--success)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem',
-            }}>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(16,185,129,0.1)', border: '2px solid var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
               <CheckCircle2 size={36} style={{ color: 'var(--success)' }} />
             </div>
-            <p style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.4rem' }}>
-              All Payments Sent! 🎉
-            </p>
+            <p style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.4rem' }}>All Payments Sent! 🎉</p>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
               {total > 0 ? `${total.toFixed(4)} XLM split across ${numReceivers} receiver${numReceivers > 1 ? 's' : ''} (${share.toFixed(4)} XLM each)` : 'Payments sent successfully.'}
             </p>
             {txHash && (
-              <a
-                href={`https://stellar.expert/explorer/testnet/tx/${txHash}`}
-                target="_blank" rel="noopener noreferrer"
-                className="btn-success"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}
-              >
+              <a href={`https://stellar.expert/explorer/testnet/tx/${txHash}`} target="_blank" rel="noopener noreferrer"
+                className="btn-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                 <ExternalLink size={14} /> View on Stellar Explorer
               </a>
             )}
             <div>
-              <button onClick={resetAll} className="btn-secondary" style={{ width: '100%' }}>
-                ← Back
-              </button>
+              <button onClick={resetAll} className="btn-secondary" style={{ width: '100%' }}>← Back</button>
             </div>
           </div>
         )}
@@ -306,20 +332,12 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
         {/* ── Failed ── */}
         {isFailed && (
           <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-            <div style={{
-              width: '72px', height: '72px', borderRadius: '50%',
-              background: 'rgba(239,68,68,0.1)', border: '2px solid var(--error)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem',
-            }}>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '2px solid var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
               <XCircle size={36} style={{ color: 'var(--error)' }} />
             </div>
-            <p style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--error)', marginBottom: '0.5rem' }}>
-              Transaction Failed
-            </p>
+            <p style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--error)', marginBottom: '0.5rem' }}>Transaction Failed</p>
             {txError && <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>{txError}</p>}
-            <button onClick={resetAll} className="btn-secondary" style={{ width: '100%' }}>
-              ← Back
-            </button>
+            <button onClick={resetAll} className="btn-secondary" style={{ width: '100%' }}>← Back</button>
           </div>
         )}
       </div>
