@@ -194,5 +194,52 @@ export function useContract() {
     }
   }, [])
 
-  return { txStatus, txHash, error, recordPaymentOnChain, fetchPaymentsFromChain, reset }
+  // Real-time Event Streaming via Soroban RPC getEvents
+  const fetchEventsFromChain = useCallback(async (startLedger) => {
+    try {
+      const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+      
+      let ledger = startLedger
+      if (!ledger) {
+        const latest = await server.getLatestLedger()
+        ledger = latest.sequence - 100 // Look back ~500 seconds (5s per ledger)
+      }
+
+      const response = await server.getEvents({
+        startLedger: ledger,
+        filters: [
+          {
+            type: "contract",
+            contractIds: [CONTRACT_ID],
+            topics: [
+              [
+                StellarSdk.xdr.ScVal.scvSymbol("PaymentSent").toXDR("base64")
+              ]
+            ]
+          }
+        ],
+        limit: 50,
+      })
+
+      if (response.events && response.events.length > 0) {
+        return response.events.map(ev => {
+          const payload = StellarSdk.scValToNative(ev.value)
+          return {
+            id: payload.id,
+            from: payload.from,
+            to: payload.to,
+            amount: payload.amount,
+            date: Number(payload.date),
+            ledger: ev.ledger
+          }
+        }).reverse()
+      }
+      return []
+    } catch (err) {
+      console.error('Failed to stream events:', err)
+      return []
+    }
+  }, [])
+
+  return { txStatus, txHash, error, recordPaymentOnChain, fetchPaymentsFromChain, fetchEventsFromChain, reset }
 }

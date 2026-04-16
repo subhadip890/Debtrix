@@ -3,37 +3,56 @@ import { Activity, ExternalLink, Loader2 } from 'lucide-react'
 import { useContract } from '../hooks/useContract'
 
 export default function RecentActivity({ txStatus }) {
-  const { fetchPaymentsFromChain } = useContract()
+  const { fetchPaymentsFromChain, fetchEventsFromChain } = useContract()
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [lastLedger, setLastLedger] = useState(0)
 
   // Fetch from Soroban Contract
   useEffect(() => {
     let mounted = true
-    const load = async () => {
+    let pollInterval = null
+
+    const loadInitial = async () => {
       setLoading(true)
       const data = await fetchPaymentsFromChain()
       if (mounted) {
-        setPayments(data.slice(0, 5)) // show top 5 most recent
+        setPayments(data.slice(0, 5))
         setLoading(false)
+      }
+    }
+
+    const pollEvents = async () => {
+      // Poll new events using getEvents
+      const newEvents = await fetchEventsFromChain(lastLedger)
+      if (newEvents && newEvents.length > 0 && mounted) {
+        setPayments(prev => {
+          // Merge and deduplicate by id
+          const merged = [...newEvents, ...prev]
+          const unique = Array.from(new Map(merged.map(item => [item.id, item])).values())
+          return unique.sort((a, b) => b.date - a.date).slice(0, 5)
+        })
+        // Update last ledger
+        setLastLedger(newEvents[0].ledger)
       }
     }
     
     // Fetch initially
-    load()
+    loadInitial()
     
-    // Auto-refresh when a transaction finishes successfully
+    // Auto-refresh using getEvents every 5 seconds
+    pollInterval = setInterval(pollEvents, 5000)
+
+    // Fallback refresh when a local tx finishes
     if (txStatus === 'success') {
-      // Delay slightly to ensure contract state is committed
-      const timer = setTimeout(load, 3000)
-      return () => {
-        mounted = false
-        clearTimeout(timer)
-      }
+      setTimeout(pollEvents, 2000)
     }
     
-    return () => { mounted = false }
-  }, [fetchPaymentsFromChain, txStatus])
+    return () => { 
+      mounted = false 
+      clearInterval(pollInterval)
+    }
+  }, [fetchPaymentsFromChain, fetchEventsFromChain, lastLedger, txStatus])
 
   return (
     <div style={{ maxWidth: '580px', margin: '2rem auto 0' }}>
