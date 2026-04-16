@@ -21,7 +21,7 @@ const BgFallback = () => (
 export default function App() {
   const { publicKey, network, isConnected, connecting, isInitializing, error: walletError, connectWallet, disconnectWallet } = useWallet()
   const { displayBalance, loading: balanceLoading, refetch: refetchBalance } = useBalance(publicKey)
-  const { status: txStatus, txHash, sendXLM, reset: resetTx } = useTransaction()
+  const { status: txStatus, txHash, error: txError, sendXLM, reset: resetTx } = useTransaction()
   const { recordPaymentOnChain } = useContract()
 
   const [notifications, setNotifications] = useState([])
@@ -47,37 +47,41 @@ export default function App() {
     }
   }
 
-  // ── Settle flow ──
-  const handleConfirmSettle = async (paymentParams) => {
+  // ── Settle flow — sends XLM to each receiver sequentially ──
+  const handleConfirmSettle = async ({ receivers, totalAmount }) => {
     resetTx()
-    const result = await sendXLM({
-      from: publicKey,
-      to: paymentParams.to,
-      amount: paymentParams.amount,
-      memo: 'Debtrix settle',
-    })
+    let lastHash = null
 
-    if (result.success) {
-      pushNotification({
-        status: 'success',
-        txHash: result.hash,
-        message: `Sent ${paymentParams.amount} XLM to ${paymentParams.to.slice(0,4)}...`,
+    for (const { to, amount } of receivers) {
+      const result = await sendXLM({
+        from: publicKey,
+        to,
+        amount,
+        memo: 'Debtrix split',
       })
-      refetchBalance()
-      // Log the payment on-chain via smart contract (fire and forget)
+
+      if (!result.success) {
+        pushNotification({ status: 'failed', message: result.error })
+        return
+      }
+      lastHash = result.hash
+
+      // Log each payment on-chain
       recordPaymentOnChain({
         id: result.hash,
         from: publicKey,
-        to: paymentParams.to,
-        amount: paymentParams.amount,
+        to,
+        amount,
         date: BigInt(Math.floor(Date.now() / 1000)),
       })
-    } else {
-      pushNotification({
-        status: 'failed',
-        message: result.error,
-      })
     }
+
+    pushNotification({
+      status: 'success',
+      txHash: lastHash,
+      message: `Split ${totalAmount.toFixed(4)} XLM across ${receivers.length} receiver${receivers.length > 1 ? 's' : ''}!`,
+    })
+    refetchBalance()
   }
 
   // ── Initializing loader ──
@@ -172,6 +176,9 @@ export default function App() {
               publicKey={publicKey}
               onSettle={handleConfirmSettle}
               isPending={txStatus === 'pending'}
+              txStatus={txStatus}
+              txHash={txHash}
+              txError={txError}
             />
           </div>
         ) : (
