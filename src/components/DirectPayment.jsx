@@ -13,7 +13,7 @@ function isValidStellarAddress(addr) {
   }
 }
 
-export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, txError }) {
+export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, txError, onBack }) {
   const [totalAmount, setTotalAmount]   = useState('')
   const [divideBy, setDivideBy]         = useState('')        // N
   const [receivers, setReceivers]       = useState([])         // N-1 addresses
@@ -49,6 +49,7 @@ export default function DirectPayment({ publicKey, onSettle, txStatus, txHash, t
     setDivideBy('')
     setReceivers([])
     setError('')
+    if (onBack) onBack()  // also reset txStatus in parent
   }
 
   const handleSettle = (e) => {

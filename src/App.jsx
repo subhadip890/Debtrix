@@ -179,6 +179,7 @@ export default function App() {
               txStatus={txStatus}
               txHash={txHash}
               txError={txError}
+              onBack={resetTx}
             />
           </div>
         ) : (
