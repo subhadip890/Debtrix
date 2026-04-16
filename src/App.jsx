@@ -10,6 +10,7 @@ import Header from './components/Header'
 import WalletBar from './components/WalletBar'
 import TransactionFeedback from './components/TransactionFeedback'
 import DirectPayment from './components/DirectPayment'
+import RecentActivity from './components/RecentActivity'
 
 // Defer heavy Three.js chunk — app UI is interactive before 3D loads
 const AnimatedBackground = lazy(() => import('./components/AnimatedBackground'))
@@ -181,6 +182,7 @@ export default function App() {
               txError={txError}
               onBack={resetTx}
             />
+            <RecentActivity txStatus={txStatus} />
           </div>
         ) : (
           /* Not connected – hero prompt */

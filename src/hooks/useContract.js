@@ -137,5 +137,53 @@ export function useContract() {
     }
   }, [publicKey, getKit])
 
-  return { txStatus, txHash, error, recordPaymentOnChain, reset }
+  // Read direct payment logs from the contract
+  const fetchPaymentsFromChain = useCallback(async () => {
+    try {
+      const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+      // For read-only calls (get_payments), we simulate it with a dummy account
+      const dummyAccount = new StellarSdk.Account('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', '0')
+      
+      const txBuilder = new StellarSdk.TransactionBuilder(dummyAccount, {
+        fee: '100',
+        networkPassphrase: NETWORK_PASSPHRASE,
+      })
+      .addOperation(
+        StellarSdk.Operation.invokeHostFunction({
+          func: StellarSdk.xdr.HostFunction.hostFunctionTypeInvokeContract(
+            new StellarSdk.xdr.InvokeContractArgs({
+              contractAddress: new StellarSdk.Address(CONTRACT_ID).toScAddress(),
+              functionName: 'get_payments',
+              args: [],
+            })
+          ),
+          auth: [],
+        })
+      )
+      .setTimeout(30)
+
+      const simulation = await server.simulateTransaction(txBuilder.build())
+      if (simulation.error) throw new Error(simulation.error)
+
+      if (simulation.result?.retval) {
+        const records = StellarSdk.scValToNative(simulation.result.retval)
+        if (Array.isArray(records)) {
+          // Native map parsing
+          return records.map(p => ({
+            id: p.id,
+            from: p.from,
+            to: p.to,
+            amount: p.amount,
+            date: Number(p.date)
+          })).reverse() // Show newest first
+        }
+      }
+      return []
+    } catch (err) {
+      console.error('Failed to fetch payments:', err)
+      return []
+    }
+  }, [])
+
+  return { txStatus, txHash, error, recordPaymentOnChain, fetchPaymentsFromChain, reset }
 }
