@@ -42,7 +42,7 @@ export function useContract() {
         }),
         new StellarSdk.xdr.ScMapEntry({
           key: StellarSdk.nativeToScVal('from', { type: 'string' }),
-          val: StellarSdk.nativeToScVal(paymentData.from, { type: 'string' }),
+          val: StellarSdk.nativeToScVal(paymentData.from, { type: 'address' }),
         }),
         new StellarSdk.xdr.ScMapEntry({
           key: StellarSdk.nativeToScVal('to', { type: 'string' }),
