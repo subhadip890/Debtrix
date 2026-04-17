@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rust & Cargo
+target/
+Cargo.lock
+**/*.rs.bk
+
+# Soroban
+.soroban/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/

@@ -50,10 +50,11 @@ impl DebtrixContract {
         if let Some(token_addr) = env.storage().instance().get::<_, Address>(&DataKey::RewardToken) {
             // Give 10 DBTX points per payment as a reward
             let reward_amount: i128 = 10;
+            use soroban_sdk::IntoVal;
             env.invoke_contract::<()>(
                 &token_addr,
                 &Symbol::new(&env, "mint"),
-                vec![&env, payment.from.to_val(), reward_amount.into()]
+                vec![&env, payment.from.to_val(), reward_amount.into_val(&env)]
             );
         }
     }
