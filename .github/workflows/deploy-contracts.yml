@@ -37,8 +37,8 @@ jobs:
         run: |
           source $HOME/.cargo/env
           stellar keys generate alice --network testnet
-          echo "Funded alice!"
-          
+          echo "Funded alice! Waiting 10s for Testnet to propagate..."
+          sleep 10
           echo "================================================="
           echo "Deploying REWARD TOKEN:"
           stellar contract deploy \
