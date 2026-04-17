@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import * as StellarSdk from '@stellar/stellar-sdk'
+import { SorobanRpc } from '@stellar/stellar-sdk'
 import { useWallet } from './useWallet'
 import appCache from '../utils/cache'
 
@@ -31,7 +32,7 @@ export function useContract() {
     try {
       if (!publicKey) throw new Error('Wallet not connected')
 
-      const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+      const server = new SorobanRpc.Server('https://soroban-testnet.stellar.org')
       const account = await server.getAccount(publicKey)
 
       // Build the PaymentLog struct as a Soroban ScVal map
@@ -90,7 +91,9 @@ export function useContract() {
       // Sign with Wallet Kit (Freighter)
       const kit = getKit()
       const { signedTxXdr, error: signError } = await kit.signTransaction(transaction.toXDR(), {
+        networkPassphrase: NETWORK_PASSPHRASE,
         network: 'TESTNET',
+        address: publicKey,
       })
 
       if (signError) throw new Error(signError)
@@ -148,7 +151,7 @@ export function useContract() {
     if (cached) return cached
 
     try {
-      const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+      const server = new SorobanRpc.Server('https://soroban-testnet.stellar.org')
       // For read-only calls (get_payments), we simulate it with a dummy account
       const dummyAccount = new StellarSdk.Account('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', '0')
       
@@ -197,7 +200,7 @@ export function useContract() {
   // Real-time Event Streaming via Soroban RPC getEvents
   const fetchEventsFromChain = useCallback(async (startLedger) => {
     try {
-      const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+      const server = new SorobanRpc.Server('https://soroban-testnet.stellar.org')
       
       let ledger = startLedger
       if (!ledger) {

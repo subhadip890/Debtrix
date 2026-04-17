@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import * as StellarSdk from '@stellar/stellar-sdk'
+import { SorobanRpc } from '@stellar/stellar-sdk'
 import { CONTRACT_ID } from './useContract'
 
 const STORAGE_KEY = 'debtrix_expenses'
@@ -128,7 +129,7 @@ export function useExpenses() {
   useEffect(() => {
     if (!CONTRACT_ID || CONTRACT_ID.startsWith('CACAA')) return; // Skip if placeholder
 
-    const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+    const server = new SorobanRpc.Server('https://soroban-testnet.stellar.org')
     let lastLedger = 0;
 
     const pollEvents = async () => {

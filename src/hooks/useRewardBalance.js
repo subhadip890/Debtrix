@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as StellarSdk from '@stellar/stellar-sdk'
+import { SorobanRpc } from '@stellar/stellar-sdk'
 import { useWallet } from './useWallet'
 import appCache from '../utils/cache'
 
@@ -23,7 +24,7 @@ export function useRewardBalance() {
 
     setLoading(true)
     try {
-      const server = new StellarSdk.SorobanRpc.Server('https://soroban-testnet.stellar.org')
+      const server = new SorobanRpc.Server('https://soroban-testnet.stellar.org')
       const dummyAccount = new StellarSdk.Account('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', '0')
       
       const txBuilder = new StellarSdk.TransactionBuilder(dummyAccount, {
