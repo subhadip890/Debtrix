@@ -33,12 +33,38 @@ jobs:
           source $HOME/.cargo/env
           cargo install stellar-cli --locked
 
+      - name: Generate Alice Key
+        run: |
+          source $HOME/.cargo/env
+          stellar keys generate alice
+          ALICE_PK=$(stellar keys address alice)
+          echo "Alice public key: $ALICE_PK"
+          echo "ALICE_PK=$ALICE_PK" >> $GITHUB_ENV
+
+      - name: Fund Alice via Friendbot
+        run: |
+          echo "Funding $ALICE_PK via Friendbot..."
+          FUND_RESP=$(curl -s "https://friendbot.stellar.org/?addr=$ALICE_PK")
+          echo "Friendbot response: $FUND_RESP"
+          if echo "$FUND_RESP" | grep -q '"status": 400'; then
+            echo "❌ Friendbot funding failed"
+            exit 1
+          fi
+          echo "✅ Funded! Waiting 30s for Testnet to propagate..."
+          sleep 30
+          # Verify account exists on testnet
+          ACCOUNT_RESP=$(curl -s "https://horizon-testnet.stellar.org/accounts/$ALICE_PK")
+          if echo "$ACCOUNT_RESP" | grep -q '"id"'; then
+            echo "✅ Account confirmed on Testnet!"
+          else
+            echo "❌ Account still not found after 30s, trying once more..."
+            sleep 15
+          fi
+
       - name: Deploy Contracts
         run: |
           source $HOME/.cargo/env
-          stellar keys generate alice --network testnet
-          echo "Funded alice! Waiting 10s for Testnet to propagate..."
-          sleep 10
+
           echo "================================================="
           echo "Deploying REWARD TOKEN:"
           stellar contract deploy \
@@ -47,7 +73,7 @@ jobs:
             --network testnet > token_id.txt
           cat token_id.txt
           TOKEN_ID=$(cat token_id.txt)
-          
+
           echo "================================================="
           echo "Deploying EXPENSE SPLITTER:"
           stellar contract deploy \
@@ -56,7 +82,7 @@ jobs:
             --network testnet > splitter_id.txt
           cat splitter_id.txt
           SPLITTER_ID=$(cat splitter_id.txt)
-          
+
           echo "================================================="
           echo "Initializing Reward Token Admin to Expense Splitter:"
           stellar contract invoke \
@@ -66,7 +92,7 @@ jobs:
             -- \
             initialize \
             --admin $SPLITTER_ID
-            
+
           echo "================================================="
           echo "Linking Reward Token in Expense Splitter:"
           stellar contract invoke \
@@ -76,7 +102,7 @@ jobs:
             -- \
             set_reward_token \
             --token_addr $TOKEN_ID
-          
+
           echo "================================================="
           echo "✅ DEPLOYMENT COMPLETE!"
           echo "REWARD_TOKEN_ID=$TOKEN_ID"
