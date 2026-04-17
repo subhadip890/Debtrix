@@ -16,7 +16,9 @@ function loadExpenses() {
 function saveExpenses(expenses) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses))
-  } catch {}
+  } catch (err) {
+    console.error('Failed to save expenses:', err)
+  }
 }
 
 /**

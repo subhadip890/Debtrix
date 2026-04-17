@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcShare } from '../components/DirectPayment'
+import { calcShare } from '../utils/helpers'
 
 describe('calcShare — split amount calculation', () => {
   it('splits 100 XLM equally among 4 people → 25 XLM each', () => {

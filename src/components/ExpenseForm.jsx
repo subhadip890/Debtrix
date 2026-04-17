@@ -30,6 +30,7 @@ export default function ExpenseForm({ onAdd, onClose, myPublicKey }) {
   // Pre-fill when wallet connects
   useEffect(() => {
     if (myPublicKey) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm((f) => ({
         ...f,
         paidBy: f.paidBy || myPublicKey,

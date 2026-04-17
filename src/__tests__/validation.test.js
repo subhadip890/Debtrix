@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isValidStellarAddress } from '../components/DirectPayment'
+import { isValidStellarAddress } from '../utils/helpers'
 import * as StellarSdk from '@stellar/stellar-sdk'
 
 describe('isValidStellarAddress — Stellar address validation', () => {

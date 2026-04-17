@@ -118,7 +118,7 @@ export function useTransaction() {
       setStatus('failed')
       return { success: false, error: message }
     }
-  }, [])
+  }, [getKit])
 
   return { status, txHash, error, sendXLM, reset }
 }

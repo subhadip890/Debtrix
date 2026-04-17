@@ -1,24 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Send, Loader2, CheckCircle2, XCircle, ExternalLink,
   Users, Hash, RefreshCw, CheckCheck
 } from 'lucide-react'
-import * as StellarSdk from '@stellar/stellar-sdk'
-
-// ── Exported for unit tests ──────────────────────────────
-export function isValidStellarAddress(addr) {
-  try {
-    return StellarSdk.StrKey.isValidEd25519PublicKey(addr)
-  } catch {
-    return false
-  }
-}
-
-export function calcShare(total, n) {
-  if (!n || n < 2 || isNaN(total) || total <= 0) return 0
-  return total / n
-}
-// ────────────────────────────────────────────────────────
+import { isValidStellarAddress, calcShare } from '../utils/helpers'
 
 /** Multi-step progress bar shown while paying N receivers */
 function SettlementProgress({ current, total }) {
@@ -66,30 +51,39 @@ export default function DirectPayment({
   settlementStep = 0, settlementTotal = 0,
 }) {
   const [totalAmount, setTotalAmount] = useState('')
-  const [divideBy, setDivideBy]       = useState('')
-  const [receivers, setReceivers]     = useState([])
-  const [error, setError]             = useState('')
+  const [divideBy, setDivideBy] = useState('')
+  const [receivers, setReceivers] = useState([])
+  const [error, setError] = useState('')
 
   const isPending = txStatus === 'pending'
   const isSuccess = txStatus === 'success'
-  const isFailed  = txStatus === 'failed'
-  const isDone    = isSuccess || isFailed
+  const isFailed = txStatus === 'failed'
+  const isDone = isSuccess || isFailed
 
-  const total        = parseFloat(totalAmount) || 0
-  const n            = parseInt(divideBy, 10)
-  const validN       = !isNaN(n) && n >= 2
-  const share        = calcShare(total, n)
+  const total = parseFloat(totalAmount) || 0
+  const n = parseInt(divideBy, 10)
+  const validN = !isNaN(n) && n >= 2
+  const share = calcShare(total, n)
   const numReceivers = validN ? n - 1 : 0
 
-  useEffect(() => {
-    if (!validN) { setReceivers([]); return }
+  const handleDivideByChange = (e) => {
+    const val = e.target.value
+    setDivideBy(val)
+    const newN = parseInt(val, 10)
+    const newValidN = !isNaN(newN) && newN >= 2
+    
+    if (!newValidN) { 
+      setReceivers([])
+      return 
+    }
+    
+    const needed = newN - 1
     setReceivers((prev) => {
-      const needed = numReceivers
       if (prev.length === needed) return prev
       if (prev.length < needed) return [...prev, ...Array(needed - prev.length).fill('')]
       return prev.slice(0, needed)
     })
-  }, [numReceivers, validN])
+  }
 
   const updateReceiver = (idx, val) =>
     setReceivers((prev) => { const u = [...prev]; u[idx] = val; return u })
@@ -199,7 +193,7 @@ export default function DirectPayment({
                     step="1"
                     placeholder="e.g. 3"
                     value={divideBy}
-                    onChange={(e) => setDivideBy(e.target.value)}
+                    onChange={handleDivideByChange}
                     disabled={isPending}
                     style={{ paddingLeft: '2.25rem', fontSize: '1.25rem', fontWeight: 700, textAlign: 'center' }}
                   />
