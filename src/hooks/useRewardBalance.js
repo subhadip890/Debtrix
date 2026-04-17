@@ -3,8 +3,8 @@ import * as StellarSdk from '@stellar/stellar-sdk'
 import { useWallet } from './useWallet'
 import appCache from '../utils/cache'
 
-// Note: Replace with the deployed reward token ID from the GitHub action!
-export const REWARD_TOKEN_ID = 'CBZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'
+// DBTX Reward Token deployed on Stellar Testnet via GitHub Actions CI/CD
+export const REWARD_TOKEN_ID = 'CCOPA4SSIJ3IU2PGIS7PWB4MPTORZF3HMPPZ7PFBN2UOJWZCQPU2CUKK'
 
 export function useRewardBalance() {
   const { publicKey } = useWallet()

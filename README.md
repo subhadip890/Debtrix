@@ -210,16 +210,24 @@ This level focuses on **advanced contract patterns and production readiness**.
 
 #### 4. Contract Addresses & Transaction Hash
 
-**Expense Splitter Contract:**
+**Expense Splitter Contract (Green Belt — Updated):**
 ```text
-CA5OIXRV6XOLVWSM2OOQEJZRK3XNN7T7NLTQ32IZH6ZWXIWZO5JKT6R3
+CDYCIERVPW263WQVZRZCLDQHLYRAJ7BDY4JZKOBZAAOQ2ZXBPR3DM6I5
 ```
 
 **DBTX Reward Token Contract:**
-*(To generate this address, run the `Deploy Contracts to Testnet` action in your GitHub Actions tab, then update this section and your `src/hooks/useRewardBalance.js`)*
+```text
+CCOPA4SSIJ3IU2PGIS7PWB4MPTORZF3HMPPZ7PFBN2UOJWZCQPU2CUKK
+```
 
-**Transaction Hash (Inter-contract invocation):**
-> *(Paste a transaction hash here after testing the deployed contracts)*
+**Deployment Transaction Hashes (Inter-contract invocation via CI/CD):**
+
+| Action | Transaction Hash | Explorer |
+|--------|-----------------|---------|
+| Deploy Reward Token | `21f12daa1f00f220010afd601aad8dfa151aa746c9f124266b1a1a1875096245` | [View](https://stellar.expert/explorer/testnet/tx/21f12daa1f00f220010afd601aad8dfa151aa746c9f124266b1a1a1875096245) |
+| Deploy Expense Splitter | `4ae8b0e327cce17f12ea05fafd8470f3cdd61b72a221d54da4bb69ad2ce36789` | [View](https://stellar.expert/explorer/testnet/tx/4ae8b0e327cce17f12ea05fafd8470f3cdd61b72a221d54da4bb69ad2ce36789) |
+| Initialize Token Admin | `b3adcbf029103e73f01ff784f1d2be0df130847615c3ecc877c50cba3b58882e` | [View](https://stellar.expert/explorer/testnet/tx/b3adcbf029103e73f01ff784f1d2be0df130847615c3ecc877c50cba3b58882e) |
+| Link Token → Splitter | `ad52e79dadd7e21398d4baa41227ed828353e0968210dff97b754e546d4478cd` | [View](https://stellar.expert/explorer/testnet/tx/ad52e79dadd7e21398d4baa41227ed828353e0968210dff97b754e546d4478cd) |
 
 ---
 
